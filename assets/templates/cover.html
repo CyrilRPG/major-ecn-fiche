@@ -1,0 +1,46 @@
+{# Page de garde — design « luxe médical ». Variables : fiche, logo_uri. #}
+<section class="cover">
+
+  {# Bande verticale rouge signature + motif croix médicale or #}
+  <div class="cover-band">
+    {% for _ in range(4) %}
+    <svg class="cover-cross" viewBox="0 0 100 100" aria-hidden="true">
+      <path d="M38 8 H62 V38 H92 V62 H62 V92 H38 V62 H8 V38 H38 Z"
+            fill="#C9A961" fill-opacity="0.22" />
+    </svg>
+    {% endfor %}
+  </div>
+
+  {# Bloc central : logo, matière, titre, année #}
+  <div class="cover-content">
+
+    {% if logo_uri %}
+    <img class="cover-logo" src="{{ logo_uri }}" alt="Logo Major ECN" />
+    {% else %}
+    <div class="cover-logo cover-logo--placeholder">MAJOR&nbsp;ECN</div>
+    {% endif %}
+
+    <div class="cover-spacer"></div>
+
+    <div class="cover-matiere">{{ fiche.matiere }}</div>
+    <div class="cover-rule"></div>
+
+    <h1 class="cover-title">{{ fiche.nom_cours }}</h1>
+
+    <div class="cover-rule"></div>
+    <div class="cover-year">Année&nbsp;{{ fiche.annee }}</div>
+
+    {% if fiche.item %}
+    <div class="cover-item">{{ fiche.item }}</div>
+    {% endif %}
+
+  </div>
+
+  {# Cartouche élégant en bas à droite #}
+  <div class="cover-cartouche">
+    <span class="cover-cartouche-line"></span>
+    <span class="cover-cartouche-text">{{ fiche.fiche_numero or "Major ECN" }}</span>
+    <span class="cover-cartouche-line"></span>
+  </div>
+
+</section>

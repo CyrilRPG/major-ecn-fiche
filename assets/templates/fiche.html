@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>{{ fiche.matiere }} — {{ fiche.nom_cours }}</title>
+  <style>{{ css }}</style>
+</head>
+<body>
+
+  {# Sources des chaînes dynamiques (en-tête / pied de page) #}
+  <span class="string-source">{{ fiche.nom_cours }}</span>
+  <div class="running-footer">Major ECN&nbsp;&nbsp;&middot;&nbsp;&nbsp;{{ fiche.annee }}</div>
+
+  {# ── 1. PAGE DE GARDE ── #}
+  {% include 'cover.html' %}
+
+  {# ── 2. PLAN DU COURS ── #}
+  <section class="page plan-page">
+    <h2 class="page-title">Plan du cours</h2>
+    <p class="plan-subtitle">{{ fiche.matiere }}&nbsp;&middot;&nbsp;{{ fiche.nom_cours }}</p>
+
+    <ol class="plan-list">
+      {% for partie in fiche.plan %}
+      <li class="plan-partie">
+        <div class="plan-partie-head">
+          <span class="plan-num">{{ partie.numero }}</span>
+          <span class="plan-partie-title">{{ partie.titre }}</span>
+        </div>
+        {% if partie.resume %}
+        <p class="plan-resume">{{ partie.resume }}</p>
+        {% endif %}
+        {% if partie.sous_parties %}
+        <ul class="plan-sous">
+          {% for sp in partie.sous_parties %}
+          <li>
+            <span class="plan-sous-letter">{{ sp.lettre }}.</span>
+            <span class="plan-sous-title">{{ sp.titre }}</span>
+            {% if sp.resume %}<span class="plan-sous-resume"> — {{ sp.resume }}</span>{% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+
+  {# ── 3. CORPS DE LA FICHE ── #}
+  {% for partie in fiche.parties %}
+  <section class="page partie-page">
+
+    <div class="partie-banner">
+      <span class="partie-banner-num">{{ partie.numero }}</span>
+      <span class="partie-banner-title">{{ partie.titre }}</span>
+    </div>
+
+    {% if partie.intro_md %}
+    <div class="content">{{ partie.intro_md | md }}</div>
+    {% endif %}
+
+    {% for sp in partie.sous_parties %}
+    <div class="souspartie">
+      <h3 class="souspartie-title">
+        <span class="souspartie-letter">{{ sp.lettre }}</span>{{ sp.titre }}
+      </h3>
+      <div class="content">{{ sp.corps_md | md }}</div>
+
+      {% for img in sp.images %}
+      {% set uri = img.saved_path | file_uri %}
+      {% if uri %}
+      <figure class="figure">
+        <img src="{{ uri }}" alt="{{ img.description }}" />
+        <figcaption>Figure&nbsp;{{ img.figure_number }} — {{ img.description }}</figcaption>
+      </figure>
+      {% endif %}
+      {% endfor %}
+    </div>
+    {% endfor %}
+
+    {% for enc in partie.encadres %}
+    <div class="encadre encadre--{{ enc.type }}">
+      <div class="encadre-title">
+        <span class="encadre-icon">{{ encadre_icons.get(enc.type, '') }}</span>
+        <span>{{ enc.titre or encadre_labels.get(enc.type, 'Encadré') }}</span>
+      </div>
+      <div class="encadre-body content">{{ enc.contenu | md }}</div>
+    </div>
+    {% endfor %}
+
+  </section>
+  {% endfor %}
+
+  {# ── 4. TABLEAUX DE SYNTHÈSE ── #}
+  {% if fiche.tableaux %}
+  <section class="page synthese-page">
+    <div class="partie-banner partie-banner--synthese">
+      <span class="partie-banner-title">Synthèse — Tableaux de révision</span>
+    </div>
+    {% for tab in fiche.tableaux %}
+    <div class="synthese-bloc">
+      <h3 class="synthese-titre">{{ tab.titre }}</h3>
+      <div class="table-synthese content">{{ tab.markdown | md }}</div>
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {# ── 5. À RETENIR ABSOLUMENT ── #}
+  {% if fiche.points_cles %}
+  <section class="page retenir-page">
+    <div class="retenir-card">
+      <div class="retenir-eyebrow">L'essentiel</div>
+      <h2 class="retenir-title">À retenir absolument</h2>
+      <p class="retenir-sub">{{ fiche.nom_cours }}</p>
+      <div class="retenir-rule"></div>
+      <ul class="retenir-list">
+        {% for point in fiche.points_cles %}
+        <li>{{ point | md_inline }}</li>
+        {% endfor %}
+      </ul>
+      <div class="retenir-footer">
+        {% if logo_uri %}
+        <img src="{{ logo_uri }}" alt="Major ECN" class="retenir-logo" />
+        {% endif %}
+        <div class="retenir-footer-text">Major ECN&nbsp;&middot;&nbsp;{{ fiche.annee }}</div>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+</body>
+</html>

@@ -1,0 +1,604 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   MAJOR ECN — Charte « luxe médical »
+   Feuille de style des fiches (WeasyPrint / HTML → PDF, format A4 portrait)
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Polices embarquées (assets/fonts/) ─────────────────────────────────────
+   base_url = dossier assets ; repli automatique si un fichier est absent.   */
+@font-face {
+  font-family: "Playfair Display";
+  src: url("fonts/PlayfairDisplay-Regular.ttf");
+  font-weight: 400;
+}
+@font-face {
+  font-family: "Playfair Display";
+  src: url("fonts/PlayfairDisplay-Bold.ttf");
+  font-weight: 700;
+}
+@font-face {
+  font-family: "Playfair Display";
+  src: url("fonts/PlayfairDisplay-Italic.ttf");
+  font-style: italic;
+}
+@font-face {
+  font-family: "Cormorant Garamond";
+  src: url("fonts/CormorantGaramond-Regular.ttf");
+  font-weight: 400;
+}
+@font-face {
+  font-family: "Cormorant Garamond";
+  src: url("fonts/CormorantGaramond-SemiBold.ttf");
+  font-weight: 600;
+}
+@font-face {
+  font-family: "Cormorant Garamond";
+  src: url("fonts/CormorantGaramond-Italic.ttf");
+  font-style: italic;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("fonts/Inter-Regular.ttf");
+  font-weight: 400;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("fonts/Inter-Medium.ttf");
+  font-weight: 500;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("fonts/Inter-SemiBold.ttf");
+  font-weight: 600;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("fonts/Inter-Bold.ttf");
+  font-weight: 700;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("fonts/Inter-Italic.ttf");
+  font-style: italic;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("fonts/JetBrainsMono-Regular.ttf");
+}
+
+/* ── Variables de charte ──────────────────────────────────────────────────── */
+:root {
+  --red: #E11D48;
+  --gold: #C9A961;
+  --cream: #FAF7F2;
+  --anthracite: #1F2937;
+  --pearl: #9CA3AF;
+  --offwhite: #FFFEFB;
+  --red-pale: #FEE2E2;
+  --serif: "Playfair Display", "Times New Roman", serif;
+  --serif-soft: "Cormorant Garamond", "Times New Roman", serif;
+  --sans: "Inter", "Helvetica", "Arial", sans-serif;
+  --mono: "JetBrains Mono", "Courier New", monospace;
+}
+
+/* ── Mise en page : A4, en-tête, pied de page ─────────────────────────────── */
+@page {
+  size: A4;
+  margin: 24mm 18mm 20mm 18mm;
+  background: var(--offwhite);
+  border-top: 0.7pt solid var(--red);
+
+  @top-left {
+    content: counter(page);
+    font-family: var(--sans);
+    font-size: 8pt;
+    color: var(--pearl);
+    vertical-align: bottom;
+    padding-bottom: 2.4mm;
+  }
+  @top-right {
+    content: string(course-name);
+    font-family: var(--sans);
+    font-size: 8pt;
+    font-style: italic;
+    color: var(--pearl);
+    vertical-align: bottom;
+    padding-bottom: 2.4mm;
+  }
+  @bottom-center {
+    content: element(pagefooter);
+    vertical-align: top;
+    padding-top: 3mm;
+  }
+}
+
+/* La page de garde n'a ni marge, ni en-tête, ni pied de page. */
+@page :first {
+  margin: 0;
+  border: none;
+  @top-left { content: none; }
+  @top-right { content: none; }
+  @bottom-center { content: none; }
+}
+
+/* ── Réinitialisation & base ──────────────────────────────────────────────── */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  font-family: var(--sans);
+  font-size: 10.4pt;
+  line-height: 1.5;
+  color: var(--anthracite);
+}
+
+/* Sources des chaînes dynamiques (hors flux visible). */
+.string-source {
+  string-set: course-name content();
+  position: absolute;
+  top: 0;
+  left: -300mm;
+  font-size: 1pt;
+  color: transparent;
+}
+.running-footer {
+  position: running(pagefooter);
+  font-family: var(--sans);
+  font-size: 8pt;
+  letter-spacing: 0.12em;
+  color: var(--pearl);
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.page { break-before: page; }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   1. PAGE DE GARDE
+   ════════════════════════════════════════════════════════════════════════════ */
+.cover {
+  position: relative;
+  width: 210mm;
+  height: 297mm;
+  background: var(--cream);
+  overflow: hidden;
+}
+
+/* Bande verticale rouge signature (15 % de la largeur). */
+.cover-band {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 31.5mm;
+  height: 297mm;
+  background: var(--red);
+}
+.cover-cross {
+  display: block;
+  width: 15mm;
+  height: 15mm;
+  margin: 34mm auto 0 auto;
+}
+.cover-cross:first-child { margin-top: 40mm; }
+
+/* Bloc central : logo, matière, titre, année. */
+.cover-content {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 31.5mm;
+  right: 0;
+  padding: 40mm 24mm 44mm 24mm;
+}
+.cover-logo {
+  display: block;
+  max-width: 60mm;
+  max-height: 36mm;
+  margin: 0 0 0 auto;
+}
+.cover-logo--placeholder {
+  font-family: var(--serif);
+  font-size: 24pt;
+  font-weight: 700;
+  color: var(--red);
+  letter-spacing: 0.08em;
+  text-align: right;
+  border: 1pt solid var(--gold);
+  padding: 6mm 8mm;
+  width: 64mm;
+}
+.cover-spacer { height: 66mm; }
+
+.cover-matiere {
+  text-align: right;
+  font-family: var(--sans);
+  font-size: 13pt;
+  font-weight: 500;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.cover-rule {
+  width: 48mm;
+  height: 0.9pt;
+  background: var(--gold);
+  margin: 7mm 0 7mm auto;
+}
+.cover-title {
+  text-align: right;
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 39pt;
+  line-height: 1.1;
+  color: var(--anthracite);
+}
+.cover-year {
+  text-align: right;
+  font-family: var(--serif-soft);
+  font-style: italic;
+  font-size: 16pt;
+  color: var(--anthracite);
+}
+.cover-item {
+  text-align: right;
+  font-family: var(--sans);
+  font-size: 9.5pt;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--pearl);
+  margin-top: 4mm;
+}
+
+/* Cartouche élégant en bas à droite. */
+.cover-cartouche {
+  position: absolute;
+  right: 24mm;
+  bottom: 30mm;
+  text-align: center;
+}
+.cover-cartouche-line {
+  display: block;
+  width: 32mm;
+  height: 0.7pt;
+  background: var(--gold);
+  margin: 2.4mm auto;
+}
+.cover-cartouche-text {
+  display: block;
+  font-family: var(--serif-soft);
+  font-size: 12pt;
+  font-style: italic;
+  letter-spacing: 0.1em;
+  color: var(--red);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   2. PLAN DU COURS
+   ════════════════════════════════════════════════════════════════════════════ */
+.page-title {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 25pt;
+  color: var(--anthracite);
+  text-align: center;
+  padding: 4mm 0;
+  border-top: 1.4pt solid var(--red);
+  border-bottom: 1.4pt solid var(--red);
+}
+.plan-subtitle {
+  text-align: center;
+  font-family: var(--serif-soft);
+  font-style: italic;
+  font-size: 12pt;
+  color: var(--gold);
+  margin: 4mm 0 9mm 0;
+}
+.plan-list { list-style: none; }
+.plan-partie {
+  margin: 0 0 7mm 0;
+  break-inside: avoid;
+}
+.plan-partie-head {
+  border-bottom: 0.6pt solid var(--cream);
+  padding-bottom: 1.6mm;
+}
+.plan-num {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 15pt;
+  color: var(--red);
+  margin-right: 4mm;
+}
+.plan-partie-title {
+  font-family: var(--serif-soft);
+  font-weight: 600;
+  font-size: 14.5pt;
+  color: var(--anthracite);
+}
+.plan-resume {
+  font-family: var(--serif-soft);
+  font-style: italic;
+  font-size: 10.5pt;
+  color: var(--pearl);
+  margin: 1.4mm 0 0 10mm;
+}
+.plan-sous {
+  list-style: none;
+  margin: 2.4mm 0 0 10mm;
+}
+.plan-sous li {
+  margin: 1.6mm 0;
+  padding-left: 6mm;
+}
+.plan-sous-letter {
+  color: var(--gold);
+  font-weight: 700;
+  margin-left: -6mm;
+  margin-right: 2mm;
+}
+.plan-sous-title {
+  font-weight: 600;
+  color: var(--anthracite);
+}
+.plan-sous-resume {
+  font-family: var(--serif-soft);
+  font-style: italic;
+  color: var(--pearl);
+  font-size: 10pt;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   3. CORPS DE LA FICHE
+   ════════════════════════════════════════════════════════════════════════════ */
+.partie-banner {
+  background: var(--red);
+  color: #fff;
+  padding: 4.6mm 7mm;
+  margin-bottom: 7mm;
+  border-radius: 1.4mm;
+}
+.partie-banner-num {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 21pt;
+  color: var(--gold);
+  padding-right: 5mm;
+  margin-right: 5mm;
+  border-right: 0.8pt solid rgba(255, 255, 255, 0.4);
+}
+.partie-banner-title {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 17pt;
+}
+.partie-banner--synthese .partie-banner-title { padding-left: 1mm; }
+
+.souspartie { margin: 6mm 0; }
+.souspartie-title {
+  background: var(--cream);
+  border-left: 1.4mm solid var(--gold);
+  padding: 2.6mm 4mm;
+  font-family: var(--serif-soft);
+  font-weight: 600;
+  font-size: 14pt;
+  color: var(--anthracite);
+  break-after: avoid;
+}
+.souspartie-letter {
+  color: var(--red);
+  font-weight: 700;
+  margin-right: 2.4mm;
+}
+
+/* ── Typographie du contenu ──────────────────────────────────────────────── */
+.content { margin: 3mm 0; }
+.content p { margin: 2mm 0; }
+.content strong { color: #BE123C; font-weight: 700; }
+.content em { color: var(--anthracite); }
+.content h1, .content h2, .content h3, .content h4 {
+  font-family: var(--serif-soft);
+  font-weight: 600;
+  color: var(--anthracite);
+  margin: 4mm 0 2mm 0;
+}
+.content h4 { font-size: 11.5pt; }
+
+.content ul, .content ol {
+  margin: 2mm 0 2mm 5mm;
+  padding-left: 3mm;
+}
+.content li { margin: 1.3mm 0; }
+.content li::marker { color: var(--red); }
+.content ul ul li::marker { color: var(--gold); }
+.content ul ul ul li::marker { color: var(--pearl); }
+
+.content a { color: var(--red); text-decoration: none; }
+.content code {
+  font-family: var(--mono);
+  font-size: 9pt;
+  background: var(--cream);
+  padding: 0.3mm 1mm;
+  border-radius: 0.8mm;
+}
+
+/* ── Tableaux (corps) ────────────────────────────────────────────────────── */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 4mm 0;
+  font-size: 9.4pt;
+  break-inside: avoid;
+}
+th, td {
+  border: 0.5pt solid var(--pearl);
+  padding: 2mm 2.8mm;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  background: var(--cream);
+  font-family: var(--sans);
+  font-weight: 700;
+  color: var(--anthracite);
+}
+tbody tr:nth-child(even) { background: #FCFBF7; }
+td:first-child strong { color: var(--red); }
+thead { display: table-header-group; }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   4. ENCADRÉS SPÉCIAUX
+   ════════════════════════════════════════════════════════════════════════════ */
+.encadre {
+  break-inside: avoid;
+  margin: 5mm 0;
+  padding: 3.4mm 5mm;
+  border-radius: 1.4mm;
+}
+.encadre-title {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 10.6pt;
+  margin-bottom: 1.4mm;
+}
+.encadre-icon { margin-right: 1.6mm; }
+.encadre-body { margin: 0; }
+.encadre-body p:first-child { margin-top: 0; }
+.encadre-body p:last-child { margin-bottom: 0; }
+
+.encadre--a_retenir {
+  background: var(--cream);
+  border-left: 2.6mm solid var(--red);
+}
+.encadre--a_retenir .encadre-title { color: var(--red); }
+
+.encadre--piege_ecn {
+  background: var(--red-pale);
+  border-left: 2.6mm solid var(--red);
+}
+.encadre--piege_ecn .encadre-title { color: #B91C1C; }
+
+.encadre--mots_cles_tombes {
+  background: #F3F4F6;
+  border-left: 2.6mm solid var(--pearl);
+}
+.encadre--mots_cles_tombes .encadre-title { color: #4B5563; }
+
+.encadre--mnemo {
+  background: #FBF6E8;
+  border-left: 2.6mm solid var(--gold);
+}
+.encadre--mnemo .encadre-title { color: #9A7B33; }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   5. FIGURES & IMAGES
+   ════════════════════════════════════════════════════════════════════════════ */
+.figure {
+  break-inside: avoid;
+  margin: 6mm auto;
+  text-align: center;
+}
+.figure img {
+  max-width: 100%;
+  max-height: 150mm;
+  border: 0.8pt solid var(--gold);
+  padding: 1.6mm;
+  background: #fff;
+}
+.figure figcaption {
+  font-family: var(--serif-soft);
+  font-style: italic;
+  font-size: 9.6pt;
+  color: #6B7280;
+  margin-top: 2.2mm;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   6. TABLEAUX DE SYNTHÈSE
+   ════════════════════════════════════════════════════════════════════════════ */
+.synthese-bloc {
+  margin: 6mm 0;
+  break-inside: avoid;
+}
+.synthese-titre {
+  font-family: var(--serif-soft);
+  font-weight: 600;
+  font-size: 13pt;
+  color: var(--red);
+  margin-bottom: 1.6mm;
+}
+.table-synthese th {
+  background: var(--red);
+  color: #fff;
+  border-color: var(--red);
+}
+.table-synthese tbody tr:nth-child(odd) { background: #fff; }
+.table-synthese tbody tr:nth-child(even) { background: var(--cream); }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   7. À RETENIR ABSOLUMENT
+   ════════════════════════════════════════════════════════════════════════════ */
+.retenir-card {
+  border: 0.9pt solid var(--gold);
+  background: var(--cream);
+  padding: 18mm 16mm;
+  margin-top: 14mm;
+  text-align: center;
+}
+.retenir-eyebrow {
+  font-family: var(--sans);
+  font-size: 9.5pt;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.retenir-title {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 27pt;
+  color: var(--anthracite);
+  margin-top: 3mm;
+}
+.retenir-sub {
+  font-family: var(--serif-soft);
+  font-style: italic;
+  font-size: 13pt;
+  color: var(--red);
+  margin-top: 1.5mm;
+}
+.retenir-rule {
+  width: 42mm;
+  height: 0.9pt;
+  background: var(--gold);
+  margin: 7mm auto;
+}
+.retenir-list {
+  text-align: left;
+  margin: 0 4mm;
+  padding-left: 7mm;
+}
+.retenir-list li {
+  margin: 4.4mm 0;
+  padding-left: 2.4mm;
+  font-size: 11pt;
+  line-height: 1.45;
+}
+.retenir-list li::marker {
+  content: "\25C6";
+  color: var(--red);
+  font-size: 8.5pt;
+}
+.retenir-list strong { color: #BE123C; }
+.retenir-footer {
+  margin-top: 12mm;
+  text-align: center;
+}
+.retenir-logo {
+  display: block;
+  max-width: 26mm;
+  margin: 0 auto 2.4mm auto;
+}
+.retenir-footer-text {
+  font-family: var(--sans);
+  font-size: 8.5pt;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--pearl);
+}
