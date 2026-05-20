@@ -533,9 +533,8 @@ class DocxFicheWriter:
 
     # -- 3. Corps (tableaux structurés) ----------------------------------------
     def _build_partie(self, partie) -> None:
-        self._banner(f"{partie.numero}.  {partie.titre}")
         for sous in partie.sous_parties:
-            self._build_souspartie_table(partie.numero, sous)
+            self._build_souspartie_table(partie.numero, partie.titre, sous)
         self.doc.add_page_break()
 
     def _banner(self, text: str) -> None:
@@ -550,9 +549,14 @@ class DocxFicheWriter:
         run.font.size = Pt(16)
         run.font.color.rgb = RGB_WHITE
 
-    def _build_souspartie_table(self, numero: str, sous) -> None:
-        """Construit le tableau Word d'une sous-partie (lignes, réflexes, figures)."""
-        table = self.doc.add_table(rows=1 + len(sous.rows), cols=2)
+    def _build_souspartie_table(self, numero: str, titre: str, sous) -> None:
+        """Construit le tableau Word d'une sous-partie (lignes, réflexes, figures).
+
+        Les deux premières lignes — bannière de grande partie et en-tête de
+        sous-partie — sont marquées comme en-têtes : Word les répète en haut
+        de chaque page occupée par le tableau.
+        """
+        table = self.doc.add_table(rows=2 + len(sous.rows), cols=2)
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
         table.autofit = False
         _set_table_borders(table, PEARL, sz=4)
@@ -569,15 +573,36 @@ class DocxFicheWriter:
         detail_width = Mm(CONTENT_WIDTH_MM * 0.73)
         full_width = Mm(CONTENT_WIDTH_MM)
 
-        # En-tête : étiquette de partie + titre de sous-partie.
-        tag_cell, title_cell = table.rows[0].cells
+        # Ligne 0 : bannière de grande partie (en-tête répété à chaque page).
+        banner_cell = table.rows[0].cells[0].merge(table.rows[0].cells[1])
+        banner_cell.width = full_width
+        banner_cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+        _shade_cell(banner_cell, RED)
+        _set_cell_borders(banner_cell, RED, sz=4)
+        banner_par = banner_cell.paragraphs[0]
+        banner_par.paragraph_format.space_before = Pt(3)
+        banner_par.paragraph_format.space_after = Pt(3)
+        num_run = banner_par.add_run(f"{numero}  ")
+        num_run.font.name = FONT_TITLE
+        num_run.bold = True
+        num_run.font.size = Pt(15)
+        num_run.font.color.rgb = RGB_GOLD
+        banner_title_run = banner_par.add_run(titre)
+        banner_title_run.font.name = FONT_TITLE
+        banner_title_run.bold = True
+        banner_title_run.font.size = Pt(14)
+        banner_title_run.font.color.rgb = RGB_WHITE
+        _repeat_table_header(table.rows[0])
+
+        # Ligne 1 : en-tête (étiquette de partie + titre de sous-partie).
+        tag_cell, title_cell = table.rows[1].cells
         _shade_cell(tag_cell, RED)
         _shade_cell(title_cell, ROSE_PALE)
         tag_cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
         title_cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
         tag_cell.width = concept_width
         title_cell.width = detail_width
-        _repeat_table_header(table.rows[0])
+        _repeat_table_header(table.rows[1])
 
         tag_par = tag_cell.paragraphs[0]
         tag_par.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -597,7 +622,7 @@ class DocxFicheWriter:
         title_run.font.color.rgb = ROSE_DARK
 
         # Lignes : standard (concept | détail) ou réflexe (pleine largeur).
-        for index, row in enumerate(sous.rows, start=1):
+        for index, row in enumerate(sous.rows, start=2):
             table_row = table.rows[index]
             if row.kind == "normal":
                 concept_cell, detail_cell = table_row.cells
@@ -633,7 +658,7 @@ class DocxFicheWriter:
                 target_cell = merged
 
             # Figures intégrées dans la cellule de la dernière ligne.
-            if index - 1 == target:
+            if index - 2 == target:
                 for image in sous.images:
                     self._append_figure(target_cell, image)
 

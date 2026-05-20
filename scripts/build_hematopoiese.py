@@ -577,7 +577,7 @@ def _parties() -> list[Partie]:
                  "(myélofibrose, envahissement nodulaire)"),
             _row("Immunophénotypage (cytométrie en flux)",
                  "- Analyse rapide par anticorps fluorescents ; positivité si "
-                 "**> 20 %** de cellules positives\n"
+                 "**> 20 %** de cellules positives\n\n"
                  "| Lignée | Marqueur (CD) |\n"
                  "|--------|---------------|\n"
                  "| Progéniteurs | **CD34** |\n"
