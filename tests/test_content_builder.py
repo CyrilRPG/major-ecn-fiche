@@ -54,11 +54,6 @@ SYNTHESIS_MD = """\
 """
 
 EXTRAS_MD = """\
-### ALGORITHME — Démarche diagnostique
-- PA ≥ 140/90
-  - OUI → confirmer
-  - NON → pas d'HTA
-
 ### FICHE ÉCLAIR
 - HTA = PA ≥ 140/90 mmHg
 - MAPA = référence
@@ -114,11 +109,9 @@ def test_parse_synthesis() -> None:
 
 
 def test_parse_extras() -> None:
-    algorithmes, fiche_eclair = parse_extras(EXTRAS_MD)
-    assert len(algorithmes) == 1
-    assert algorithmes[0].titre == "Démarche diagnostique"
-    assert "OUI" in algorithmes[0].arbre_md
+    fiche_eclair = parse_extras(EXTRAS_MD)
     assert "MAPA" in fiche_eclair
+    assert "HTA" in fiche_eclair
 
 
 def test_parse_section_reflexe_rows() -> None:

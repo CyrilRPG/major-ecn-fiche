@@ -121,14 +121,6 @@ class TableauSynthese:
 
 
 @dataclass
-class Algorithme:
-    """Arbre décisionnel (démarche diagnostique ou thérapeutique)."""
-
-    titre: str
-    arbre_md: str
-
-
-@dataclass
 class UsageStats:
     """Comptage de tokens et coût estimé d'un ou plusieurs appels API."""
 
@@ -157,7 +149,6 @@ class FicheData:
     item: str = ""
     plan: list[PlanPartie] = field(default_factory=list)
     parties: list[Partie] = field(default_factory=list)
-    algorithmes: list[Algorithme] = field(default_factory=list)
     tableaux: list[TableauSynthese] = field(default_factory=list)
     chiffres_cles: TableauSynthese | None = None
     points_cles: list[str] = field(default_factory=list)

@@ -18,7 +18,6 @@ from major_ecn.config import LOGO_PATH  # noqa: E402
 from major_ecn.content_builder import output_basename  # noqa: E402
 from major_ecn.docx_generator import render_docx  # noqa: E402
 from major_ecn.models import (  # noqa: E402
-    Algorithme,
     AnalyzedImage,
     ExtractedImage,
     FicheData,
@@ -226,19 +225,6 @@ def _mock_fiche() -> FicheData:
         ]),
     ])
 
-    algorithmes = [
-        Algorithme(
-            titre="Démarche diagnostique devant une PA élevée",
-            arbre_md=(
-                "- PA ≥ 140/90 mmHg au cabinet\n"
-                "  - OUI → confirmer par **MAPA** ou **automesure**\n"
-                "    - MAPA ≥ 135/85 → **HTA confirmée** → bilan + traitement\n"
-                "    - MAPA < 135/85 → **HTA blouse blanche** → surveillance\n"
-                "  - NON → **pas d'HTA** → contrôle annuel"
-            ),
-        ),
-    ]
-
     tableaux = [
         TableauSynthese("Grades de sévérité de l'HTA",
                         "| Grade | PAS (mmHg) | PAD (mmHg) |\n"
@@ -298,7 +284,6 @@ def _mock_fiche() -> FicheData:
         item="Item 224",
         plan=plan,
         parties=[partie_1, partie_2, partie_3],
-        algorithmes=algorithmes,
         tableaux=tableaux,
         chiffres_cles=chiffres_cles,
         points_cles=points_cles,

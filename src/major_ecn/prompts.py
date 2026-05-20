@@ -119,29 +119,18 @@ rédigé ci-dessus.
 Respecte rigoureusement le préfixe « ### » devant chaque titre de section.
 """
 
-# ── ÉTAPE 4 — Algorithmes décisionnels + fiche éclair ─────────────────────────
+# ── ÉTAPE 4 — Fiche éclair ────────────────────────────────────────────────────
 STEP4_EXTRAS = """\
-Dernière étape — génère deux éléments à partir du contenu rédigé.
+Dernière étape — génère la FICHE ÉCLAIR : une synthèse ULTRA-CONDENSÉE du
+cours, devant tenir sur UNE SEULE page.
 
-1) ALGORITHMES décisionnels (0 à 3) : démarches diagnostiques ou
-thérapeutiques sous forme d'arbre. FORMAT :
-### ALGORITHME — [Titre de la démarche]
-- [Étape ou question initiale]
-  - OUI → [conséquence / action]
-    - [étape suivante]
-  - NON → [conséquence / action]
-Règles : utilise « → » pour introduire une conséquence ou une action ;
-l'indentation (2 espaces) matérialise les branches ; mets les
-**conclusions** en gras. Ne génère un algorithme que si le cours s'y prête.
-
-2) FICHE ÉCLAIR — synthèse ULTRA-CONDENSÉE du cours, tenant sur une page :
 ### FICHE ÉCLAIR
 - les notions absolument incontournables, en puces TRÈS courtes et denses
 - regroupe par thème si pertinent (titres en gras)
 - c'est la « fiche de la fiche » : seulement l'indispensable pour réviser
   en 5 minutes la veille de l'épreuve.
 
-Respecte rigoureusement le préfixe « ### » devant chaque titre.
+Respecte rigoureusement le préfixe « ### » devant le titre.
 """
 
 # ── ÉTAPE VISION — Analyse d'une image ────────────────────────────────────────

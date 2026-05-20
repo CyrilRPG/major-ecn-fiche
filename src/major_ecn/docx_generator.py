@@ -2,7 +2,7 @@
 
 `python-docx` ne sait pas interpréter le Markdown : un convertisseur dédié
 transforme le contenu (gras, listes imbriquées, tableaux) en éléments Word
-stylés, avec des bannières, encadrés et tableaux équivalents à la version PDF.
+stylés, avec des bannières et des tableaux équivalents à la version PDF.
 """
 
 from __future__ import annotations
@@ -63,6 +63,8 @@ _TBLPR_AFTER_BORDERS = ("w:shd", "w:tblLayout", "w:tblCellMar", "w:tblLook",
                         "w:tblCaption", "w:tblDescription", "w:tblPrChange")
 _TRPR_AFTER_HEADER = ("w:tblCellSpacing", "w:jc", "w:hidden", "w:ins",
                       "w:del", "w:trPrChange")
+_TRPR_AFTER_CANTSPLIT = ("w:trHeight", "w:tblHeader", "w:tblCellSpacing",
+                         "w:jc", "w:hidden", "w:ins", "w:del", "w:trPrChange")
 _RPR_AFTER_SPACING = ("w:w", "w:position", "w:sz", "w:szCs", "w:highlight",
                       "w:u", "w:effect", "w:bdr", "w:shd", "w:rtl")
 
@@ -145,6 +147,15 @@ def _repeat_table_header(row) -> None:
     tbl_header = OxmlElement("w:tblHeader")
     tbl_header.set(qn("w:val"), "true")
     trPr.insert_element_before(tbl_header, *_TRPR_AFTER_HEADER)
+
+
+def _no_split_rows(table) -> None:
+    """Empêche les lignes d'un tableau de se couper entre deux pages."""
+    for row in table.rows:
+        trPr = row._tr.get_or_add_trPr()
+        if trPr.find(qn("w:cantSplit")) is None:
+            trPr.insert_element_before(OxmlElement("w:cantSplit"),
+                                       *_TRPR_AFTER_CANTSPLIT)
 
 
 def _set_char_spacing(run, twips: int) -> None:
@@ -303,8 +314,6 @@ class DocxFicheWriter:
         self._build_plan(fiche)
         for partie in fiche.parties:
             self._build_partie(partie)
-        if fiche.algorithmes:
-            self._build_algorithmes(fiche)
         if fiche.tableaux or fiche.chiffres_cles:
             self._build_synthese(fiche)
         if fiche.fiche_eclair_md or fiche.points_cles:
@@ -543,11 +552,18 @@ class DocxFicheWriter:
 
     def _build_souspartie_table(self, numero: str, sous) -> None:
         """Construit le tableau Word d'une sous-partie (lignes, réflexes, figures)."""
-        total_rows = 1 + len(sous.rows) + len(sous.images)
-        table = self.doc.add_table(rows=total_rows, cols=2)
+        table = self.doc.add_table(rows=1 + len(sous.rows), cols=2)
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
         table.autofit = False
         _set_table_borders(table, PEARL, sz=4)
+
+        # Les figures sont intégrées dans la cellule de la dernière ligne.
+        target = -1
+        for i, row in enumerate(sous.rows):
+            if row.kind == "normal":
+                target = i
+        if target == -1 and sous.rows:
+            target = len(sous.rows) - 1
 
         concept_width = Mm(CONTENT_WIDTH_MM * 0.27)
         detail_width = Mm(CONTENT_WIDTH_MM * 0.73)
@@ -595,6 +611,7 @@ class DocxFicheWriter:
                 _add_inline_runs(concept_par, row.concept, size=10, bold=True,
                                  keyword_color=False)
                 self._fill_detail_cell(detail_cell, row.detail_md)
+                target_cell = detail_cell
             else:
                 merged = table_row.cells[0].merge(table_row.cells[1])
                 merged.width = full_width
@@ -613,14 +630,14 @@ class DocxFicheWriter:
                 label_run.font.color.rgb = RGBColor.from_string(color.lstrip("#"))
                 _set_char_spacing(label_run, 14)
                 self._fill_detail_cell(merged, row.detail_md)
+                target_cell = merged
 
-        # Lignes-figures : schémas intégrés en pleine largeur, dans le tableau.
-        for offset, image in enumerate(sous.images):
-            fig_row = table.rows[1 + len(sous.rows) + offset]
-            merged = fig_row.cells[0].merge(fig_row.cells[1])
-            merged.width = full_width
-            self._fill_figure_cell(merged, image)
+            # Figures intégrées dans la cellule de la dernière ligne.
+            if index - 1 == target:
+                for image in sous.images:
+                    self._append_figure(target_cell, image)
 
+        _no_split_rows(table)
         spacer = self.doc.add_paragraph()
         spacer.paragraph_format.space_after = Pt(4)
 
@@ -635,32 +652,7 @@ class DocxFicheWriter:
             element = paragraphs[0]._element
             element.getparent().remove(element)
 
-    # -- 4. Algorithmes décisionnels -------------------------------------------
-    def _build_algorithmes(self, fiche: FicheData) -> None:
-        self._banner("Algorithmes décisionnels")
-        for algo in fiche.algorithmes:
-            heading = self.doc.add_paragraph()
-            heading.paragraph_format.space_before = Pt(8)
-            run = heading.add_run(algo.titre)
-            run.font.name = FONT_SOFT
-            run.bold = True
-            run.font.size = Pt(13)
-            run.font.color.rgb = RGB_RED
-
-            box = self.doc.add_table(rows=1, cols=1)
-            box.alignment = WD_TABLE_ALIGNMENT.CENTER
-            box.autofit = False
-            cell = box.rows[0].cells[0]
-            cell.width = Mm(CONTENT_WIDTH_MM)
-            _shade_cell(cell, CREAM)
-            _set_cell_borders(cell, RED, sz=4, left_accent=22)
-            self._fill_detail_cell(cell, algo.arbre_md)
-
-            spacer = self.doc.add_paragraph()
-            spacer.paragraph_format.space_after = Pt(4)
-        self.doc.add_page_break()
-
-    # -- 5. Synthèse & chiffres-clés -------------------------------------------
+    # -- 4. Synthèse & chiffres-clés -------------------------------------------
     def _build_synthese(self, fiche: FicheData) -> None:
         self._banner("Synthèse — Tableaux de révision")
         if fiche.chiffres_cles is not None:
@@ -680,7 +672,7 @@ class DocxFicheWriter:
         run.font.color.rgb = RGB_RED
         self._render_markdown(markdown, synthese=True)
 
-    # -- 6. Fiche éclair -------------------------------------------------------
+    # -- 5. Fiche éclair -------------------------------------------------------
     def _build_eclair(self, fiche: FicheData, logo_path: Path | None) -> None:
         eyebrow = self.doc.add_paragraph()
         eyebrow.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -734,13 +726,12 @@ class DocxFicheWriter:
         ft_run.font.color.rgb = RGB_PEARL
         _set_char_spacing(ft_run, 36)
 
-    # -- Figures (intégrées en ligne de tableau) -------------------------------
-    def _fill_figure_cell(self, cell, image: AnalyzedImage) -> None:
-        """Remplit une cellule fusionnée avec un schéma et sa légende."""
-        cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
-        picture_par = cell.paragraphs[0]
+    # -- Figures (intégrées dans la cellule d'une ligne) -----------------------
+    def _append_figure(self, cell, image: AnalyzedImage) -> None:
+        """Ajoute un schéma et sa légende à la fin d'une cellule."""
+        picture_par = cell.add_paragraph()
         picture_par.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        picture_par.paragraph_format.space_before = Pt(3)
+        picture_par.paragraph_format.space_before = Pt(4)
         if image.saved_path is not None and image.saved_path.exists():
             width_mm, _ = _figure_dimensions(image.saved_path)
             try:
@@ -872,6 +863,7 @@ class DocxFicheWriter:
                     _shade_cell(cell, shade)
                 self._fill_cell(cell, row[col] if col < len(row) else "")
 
+        _no_split_rows(table)
         spacer = container.add_paragraph()
         spacer.paragraph_format.space_after = Pt(4)
 
@@ -898,7 +890,7 @@ def _split_table_row(line: str) -> list[str]:
 
 def _figure_dimensions(path: Path) -> tuple[float, float]:
     """Calcule la largeur d'affichage (mm) d'une figure en bornant sa hauteur."""
-    max_width, max_height = 132.0, 68.0
+    max_width, max_height = 118.0, 62.0
     try:
         from PIL import Image  # type: ignore
 

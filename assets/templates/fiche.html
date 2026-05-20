@@ -45,12 +45,19 @@
     </ol>
   </section>
 
-  {# ── 4. CORPS DE LA FICHE (tableaux structurés) ── #}
+  {# ── 3. CORPS DE LA FICHE (tableaux structurés) ── #}
   {% for partie in fiche.parties %}
   <section class="partie-page{% if loop.first %} partie-page--first{% endif %}"
            id="partie-{{ loop.index }}">
 
     {% for sp in partie.sous_parties %}
+    {# Les figures sont intégrées dans la cellule de la dernière ligne,
+       afin qu'elles ne se retrouvent jamais seules sur une page. #}
+    {% set ns = namespace(target=-1) %}
+    {% for row in sp.rows %}
+      {% if row.kind == 'normal' %}{% set ns.target = loop.index0 %}{% endif %}
+    {% endfor %}
+    {% if ns.target == -1 and sp.rows %}{% set ns.target = (sp.rows | length) - 1 %}{% endif %}
     <table class="fiche-table">
       <colgroup>
         <col class="ft-col-concept" />
@@ -76,25 +83,31 @@
         {% if row.kind == 'normal' %}
         <tr>
           <td class="ft-concept">{{ row.concept | md_inline }}</td>
-          <td class="ft-detail content">{{ row.detail_md | md }}</td>
+          <td class="ft-detail content">
+            {{ row.detail_md | md }}
+            {% if loop.index0 == ns.target %}
+              {% for img in sp.images %}{% set uri = img.saved_path | file_uri %}
+              {% if uri %}<figure class="ft-figure">
+                <img src="{{ uri }}" alt="{{ img.description }}" />
+                <figcaption>Figure&nbsp;{{ img.figure_number }} —
+                  {{ img.description }}</figcaption>
+              </figure>{% endif %}{% endfor %}
+            {% endif %}
+          </td>
         </tr>
         {% else %}
         <tr class="ft-reflexe ft-reflexe--{{ row.kind }}">
           <td colspan="2">
             <span class="ft-reflexe-label">{{ reflexe_labels.get(row.kind, '') }}</span>
             <span class="ft-reflexe-body content">{{ row.detail_md | md }}</span>
-          </td>
-        </tr>
-        {% endif %}
-        {% endfor %}
-        {% for img in sp.images %}
-        {% set uri = img.saved_path | file_uri %}
-        {% if uri %}
-        <tr class="ft-figure-row">
-          <td colspan="2" class="ft-figure-cell">
-            <img src="{{ uri }}" alt="{{ img.description }}" />
-            <div class="ft-figure-caption">Figure&nbsp;{{ img.figure_number }} —
-              {{ img.description }}</div>
+            {% if loop.index0 == ns.target %}
+              {% for img in sp.images %}{% set uri = img.saved_path | file_uri %}
+              {% if uri %}<figure class="ft-figure">
+                <img src="{{ uri }}" alt="{{ img.description }}" />
+                <figcaption>Figure&nbsp;{{ img.figure_number }} —
+                  {{ img.description }}</figcaption>
+              </figure>{% endif %}{% endfor %}
+            {% endif %}
           </td>
         </tr>
         {% endif %}
@@ -106,22 +119,7 @@
   </section>
   {% endfor %}
 
-  {# ── 5. ALGORITHMES DÉCISIONNELS ── #}
-  {% if fiche.algorithmes %}
-  <section class="page algo-page">
-    <div class="partie-banner partie-banner--plain">
-      <span class="partie-banner-title">Algorithmes décisionnels</span>
-    </div>
-    {% for algo in fiche.algorithmes %}
-    <div class="algo-bloc">
-      <h3 class="algo-titre">{{ algo.titre }}</h3>
-      <div class="algo-tree content">{{ algo.arbre_md | md }}</div>
-    </div>
-    {% endfor %}
-  </section>
-  {% endif %}
-
-  {# ── 6. SYNTHÈSE & CHIFFRES-CLÉS ── #}
+  {# ── 4. SYNTHÈSE & CHIFFRES-CLÉS ── #}
   {% if fiche.tableaux or fiche.chiffres_cles %}
   <section class="page synthese-page">
     <div class="partie-banner partie-banner--plain">
@@ -144,7 +142,7 @@
   </section>
   {% endif %}
 
-  {# ── 7. FICHE ÉCLAIR ── #}
+  {# ── 5. FICHE ÉCLAIR ── #}
   {% if fiche.fiche_eclair_md or fiche.points_cles %}
   <section class="page eclair-page">
     <div class="eclair-card">

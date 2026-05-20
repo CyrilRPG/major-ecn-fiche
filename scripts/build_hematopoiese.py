@@ -19,7 +19,6 @@ from major_ecn.config import LOGO_PATH  # noqa: E402
 from major_ecn.content_builder import output_basename  # noqa: E402
 from major_ecn.docx_generator import render_docx  # noqa: E402
 from major_ecn.models import (  # noqa: E402
-    Algorithme,
     AnalyzedImage,
     ExtractedImage,
     FicheData,
@@ -643,35 +642,6 @@ def _parties() -> list[Partie]:
     return [p1, p2, p3, p4, p5, p6, p7]
 
 
-def _algorithmes() -> list[Algorithme]:
-    return [
-        Algorithme(
-            titre="Orientation devant une hémopathie maligne",
-            arbre_md=(
-                "- Anomalie génomique acquise dans un progéniteur/précurseur\n"
-                "  - Capacité de différenciation **perdue** → accumulation de "
-                "blastes → **leucémie aiguë** (LAM ou LAL)\n"
-                "  - Capacité de différenciation **conservée**\n"
-                "    - Lignée **myéloïde** → **syndrome myéloprolifératif** "
-                "(Vaquez, LMC, thrombocytémie essentielle, myélofibrose)\n"
-                "    - Lignée **lymphoïde** → **syndrome lymphoprolifératif** "
-                "(LLC, lymphome, myélome)"
-            ),
-        ),
-        Algorithme(
-            titre="Déficit de production intramédullaire : les 4 conditions",
-            arbre_md=(
-                "- Hématopoïèse normale = 4 conditions réunies\n"
-                "  - Absence de **CSH** → **aplasie médullaire**\n"
-                "  - **Dysfonctionnement** des CSH → **syndrome "
-                "myélodysplasique**\n"
-                "  - Apports insuffisants → **carence** en fer, folates ou B12\n"
-                "  - Manque d'**espace** → **envahissement** ou **myélofibrose**"
-            ),
-        ),
-    ]
-
-
 def _tableaux() -> list[TableauSynthese]:
     return [
         TableauSynthese(
@@ -806,7 +776,6 @@ def build() -> FicheData:
         item="",
         plan=_plan(),
         parties=_parties(),
-        algorithmes=_algorithmes(),
         tableaux=_tableaux(),
         chiffres_cles=_chiffres(),
         points_cles=_points_cles(),

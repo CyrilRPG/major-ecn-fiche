@@ -18,7 +18,6 @@ from anthropic import AsyncAnthropic
 from major_ecn.ai_processor import AIProcessor
 from major_ecn.image_analyzer import ImageAnalyzer
 from major_ecn.models import (
-    Algorithme,
     AnalyzedImage,
     ExtractedDocument,
     FicheData,
@@ -270,25 +269,14 @@ def parse_synthesis(
     return tableaux, chiffres, points
 
 
-def parse_extras(extras_md: str) -> tuple[list[Algorithme], str]:
-    """Sépare les algorithmes décisionnels et la fiche éclair (étape 4)."""
-    algorithmes: list[Algorithme] = []
-    fiche_eclair = ""
+def parse_extras(extras_md: str) -> str:
+    """Extrait la fiche éclair (étape 4)."""
     for title, body_lines in _split_heading_blocks(extras_md):
         body = "\n".join(body_lines).strip()
-        if not body:
-            continue
-        normalized = strip_accents(title).lower()
-        if normalized.startswith("algorithme"):
-            label = re.sub(r"^algorithme\s*[—\-–:]*\s*", "", title,
-                           flags=re.IGNORECASE).strip()
-            algorithmes.append(
-                Algorithme(titre=label or "Arbre décisionnel",
-                           arbre_md=_normalize_indentation(body))
-            )
-        elif "fiche eclair" in normalized:
-            fiche_eclair = body
-    return algorithmes, fiche_eclair
+        if body and "fiche eclair" in strip_accents(title).lower():
+            return body
+    # Repli : pas de titre « ### » mais du contenu présent.
+    return extras_md.strip()
 
 
 # ── Placement des images ──────────────────────────────────────────────────────
@@ -387,10 +375,10 @@ async def build_fiche(
     synthesis_md = await processor.generate_synthesis()
     tableaux, chiffres_cles, points_cles = parse_synthesis(synthesis_md)
 
-    # Étape 4 — algorithmes décisionnels + fiche éclair.
-    _progress("algorithmes & fiche éclair")
+    # Étape 4 — fiche éclair.
+    _progress("fiche éclair")
     extras_md = await processor.generate_extras()
-    algorithmes, fiche_eclair_md = parse_extras(extras_md)
+    fiche_eclair_md = parse_extras(extras_md)
 
     # Récupération de l'analyse vision et placement des images.
     _progress("images")
@@ -408,7 +396,6 @@ async def build_fiche(
         item=plan_result.item,
         plan=plan_parties,
         parties=parties,
-        algorithmes=algorithmes,
         tableaux=tableaux,
         chiffres_cles=chiffres_cles,
         points_cles=points_cles,
