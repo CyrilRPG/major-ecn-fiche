@@ -12,7 +12,7 @@ from major_ecn.utils.logger import get_logger
 T = TypeVar("T")
 
 # Codes HTTP considérés comme transitoires (méritent un nouvel essai).
-_TRANSIENT_STATUS = {408, 409, 429, 500, 502, 503, 504}
+_TRANSIENT_STATUS = {408, 409, 429, 500, 502, 503, 504, 529}
 
 
 def _is_transient(exc: BaseException) -> bool:
