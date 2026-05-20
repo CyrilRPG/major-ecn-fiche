@@ -1,0 +1,47 @@
+[project]
+name = "major-ecn-generator"
+version = "1.0.0"
+description = "Générateur de fiches de révision Major ECN haut de gamme à partir de PDF de cours de médecine."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Major ECN" }]
+dependencies = [
+    "anthropic>=0.49.0",
+    "pymupdf>=1.24.0",
+    "weasyprint>=63.0",
+    "python-docx>=1.1.2",
+    "typer>=0.12.3",
+    "rich>=13.7.0",
+    "jinja2>=3.1.4",
+    "markdown>=3.7",
+    "python-dotenv>=1.0.1",
+    "pillow>=10.4.0",
+    "pdf2image>=1.17.0",
+    "pytesseract>=0.3.13",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2.0",
+    "pytest-asyncio>=0.23.7",
+]
+
+[project.scripts]
+major-ecn = "major_ecn.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/major_ecn"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

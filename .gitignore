@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Environnements virtuels
+.venv/
+venv/
+env/
+
+# Secrets & configuration locale
+.env
+
+# Logs de run
+logs/
+*.log
+
+# Sorties générées
+Fiches_Major_ECN/
+**/Fiches_Major_ECN/
+
+# Caches outils
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.uv/
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
