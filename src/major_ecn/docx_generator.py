@@ -17,16 +17,18 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Mm, Pt, RGBColor
 
-from major_ecn.config import FICHE_LEGEND
+from major_ecn.config import CATEGORIES, FICHE_LEGEND, REFLEXE_TYPES
 from major_ecn.models import AnalyzedImage, FicheData
 
 # ── Couleurs de la charte (hex sans « # » pour le XML, RGBColor pour les runs) ─
 RED = "E11D48"
+GOLD = "C9A961"
 CREAM = "FAF7F2"
 PEARL = "9CA3AF"
 ROW_ALT = "FCFBF7"
 ROSE_PALE = "FCE7EC"
 ROSE_DARK = RGBColor(0x9F, 0x12, 0x39)
+GOLD_DARK = RGBColor(0x9A, 0x7B, 0x33)
 
 RGB_RED = RGBColor(0xE1, 0x1D, 0x48)
 RGB_GOLD = RGBColor(0xC9, 0xA9, 0x61)
@@ -57,6 +59,7 @@ _PPR_AFTER_SHD = ("w:tabs", "w:spacing", "w:ind", "w:contextualSpacing",
 _PPR_AFTER_PBDR = ("w:shd",) + _PPR_AFTER_SHD
 _TCPR_AFTER_SHD = ("w:noWrap", "w:tcMar", "w:textDirection", "w:tcFitText",
                    "w:vAlign", "w:hideMark", "w:tcPrChange")
+_TCPR_AFTER_BORDERS = ("w:shd",) + _TCPR_AFTER_SHD
 _TBLPR_AFTER_BORDERS = ("w:shd", "w:tblLayout", "w:tblCellMar", "w:tblLook",
                         "w:tblCaption", "w:tblDescription", "w:tblPrChange")
 _TRPR_AFTER_HEADER = ("w:tblCellSpacing", "w:jc", "w:hidden", "w:ins",
@@ -126,6 +129,15 @@ def _clear_table_borders(table) -> None:
     for edge in ("top", "left", "bottom", "right", "insideH", "insideV"):
         borders.append(_border_element(f"w:{edge}", val="none"))
     table._tbl.tblPr.insert_element_before(borders, *_TBLPR_AFTER_BORDERS)
+
+
+def _set_cell_borders(cell, color: str, sz: int = 4, left_accent: int | None = None) -> None:
+    """Borde une cellule (bordure uniforme + bordure gauche d'accent optionnelle)."""
+    borders = OxmlElement("w:tcBorders")
+    for side in ("top", "left", "bottom", "right"):
+        edge_sz = left_accent if (side == "left" and left_accent is not None) else sz
+        borders.append(_border_element(f"w:{side}", sz=edge_sz, color=color))
+    cell._tc.get_or_add_tcPr().insert_element_before(borders, *_TCPR_AFTER_BORDERS)
 
 
 def _repeat_table_header(row) -> None:
@@ -277,13 +289,16 @@ class DocxFicheWriter:
         """Construit et renvoie le document Word complet."""
         self._configure_header_footer(fiche)
         self._build_cover(fiche, logo_path)
+        self._build_entete(fiche)
         self._build_plan(fiche)
         for partie in fiche.parties:
             self._build_partie(partie)
-        if fiche.tableaux:
+        if fiche.algorithmes:
+            self._build_algorithmes(fiche)
+        if fiche.tableaux or fiche.chiffres_cles:
             self._build_synthese(fiche)
-        if fiche.points_cles:
-            self._build_retenir(fiche, logo_path)
+        if fiche.fiche_eclair_md or fiche.points_cles:
+            self._build_eclair(fiche, logo_path)
         return self.doc
 
     # -- 1. Page de garde ------------------------------------------------------
@@ -413,21 +428,121 @@ class DocxFicheWriter:
         run.font.size = Pt(12)
         run.font.color.rgb = RGB_GOLD
 
-    # -- 2. Plan ---------------------------------------------------------------
-    def _build_plan(self, fiche: FicheData) -> None:
+    # -- Titres de section ------------------------------------------------------
+    def _section_title(self, text: str) -> None:
+        """Titre de page encadré d'un filet rouge."""
         title = self.doc.add_paragraph()
         title.alignment = WD_ALIGN_PARAGRAPH.CENTER
         title.paragraph_format.space_before = Pt(4)
-        title_run = title.add_run("Plan du cours")
-        title_run.font.name = FONT_TITLE
-        title_run.font.size = Pt(24)
-        title_run.bold = True
-        title_run.font.color.rgb = RGB_ANTHRACITE
+        run = title.add_run(text)
+        run.font.name = FONT_TITLE
+        run.font.size = Pt(23)
+        run.bold = True
+        run.font.color.rgb = RGB_ANTHRACITE
         _set_paragraph_borders(
             title,
             top={"sz": 12, "color": RED, "space": 6},
             bottom={"sz": 12, "color": RED, "space": 6},
         )
+
+    def _info_title(self, text: str) -> None:
+        """Sous-titre de bloc d'information (en-tête / fiche éclair)."""
+        paragraph = self.doc.add_paragraph()
+        paragraph.paragraph_format.space_before = Pt(9)
+        paragraph.paragraph_format.space_after = Pt(2)
+        run = paragraph.add_run(text)
+        run.font.name = FONT_SOFT
+        run.bold = True
+        run.font.size = Pt(13)
+        run.font.color.rgb = RGB_RED
+        _set_paragraph_borders(paragraph, bottom={"sz": 4, "color": GOLD, "space": 4})
+
+    # -- 1 bis. Fiche signalétique ---------------------------------------------
+    def _build_entete(self, fiche: FicheData) -> None:
+        self._section_title("Fiche signalétique")
+        en = fiche.en_tete
+
+        meta = [
+            ("Item ECN", fiche.item or "—"),
+            ("Matière", fiche.matiere),
+            ("Lecture estimée", f"≈ {en.duree_lecture} min"),
+            ("Année", fiche.annee),
+        ]
+        table = self.doc.add_table(rows=2, cols=4)
+        table.alignment = WD_TABLE_ALIGNMENT.CENTER
+        _set_table_borders(table, PEARL, sz=4)
+        for col, (key, value) in enumerate(meta):
+            key_cell, val_cell = table.rows[0].cells[col], table.rows[1].cells[col]
+            _shade_cell(key_cell, CREAM)
+            _shade_cell(val_cell, CREAM)
+            key_par = key_cell.paragraphs[0]
+            key_par.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            key_run = key_par.add_run(key.upper())
+            key_run.font.name = FONT_BODY
+            key_run.bold = True
+            key_run.font.size = Pt(7.5)
+            key_run.font.color.rgb = RGB_PEARL
+            val_par = val_cell.paragraphs[0]
+            val_par.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            val_run = val_par.add_run(value)
+            val_run.font.name = FONT_SOFT
+            val_run.bold = True
+            val_run.font.size = Pt(12)
+            val_run.font.color.rgb = RGB_RED
+
+        if en.vignette:
+            box = self.doc.add_table(rows=1, cols=1)
+            box.alignment = WD_TABLE_ALIGNMENT.CENTER
+            box.autofit = False
+            cell = box.rows[0].cells[0]
+            cell.width = Mm(CONTENT_WIDTH_MM)
+            _shade_cell(cell, "FFFBF4")
+            _set_cell_borders(cell, GOLD, sz=4, left_accent=22)
+            tag_par = cell.paragraphs[0]
+            tag_par.paragraph_format.space_before = Pt(4)
+            tag_run = tag_par.add_run("VIGNETTE CLINIQUE")
+            tag_run.font.name = FONT_BODY
+            tag_run.bold = True
+            tag_run.font.size = Pt(8)
+            tag_run.font.color.rgb = GOLD_DARK
+            _set_char_spacing(tag_run, 28)
+            body_par = cell.add_paragraph()
+            body_par.paragraph_format.space_after = Pt(4)
+            body_run = body_par.add_run(en.vignette)
+            body_run.font.name = FONT_SOFT
+            body_run.italic = True
+            body_run.font.size = Pt(11.5)
+            body_run.font.color.rgb = RGB_ANTHRACITE
+
+        if en.objectifs:
+            self._info_title("Objectifs d'apprentissage")
+            for objectif in en.objectifs:
+                par = self.doc.add_paragraph(style="List Bullet")
+                par.paragraph_format.space_after = Pt(2)
+                _add_inline_runs(par, objectif, size=10.5)
+
+        for label, items in (("Prérequis", en.prerequis),
+                             ("Items & cours liés", en.items_lies)):
+            if items:
+                self._info_title(label)
+                for entry in items:
+                    par = self.doc.add_paragraph(style="List Bullet")
+                    par.paragraph_format.space_after = Pt(2)
+                    _add_inline_runs(par, entry, size=10.5)
+
+        if en.mots_cles:
+            self._info_title("Mots-clés")
+            par = self.doc.add_paragraph()
+            kw_run = par.add_run("   ·   ".join(en.mots_cles))
+            kw_run.font.name = FONT_BODY
+            kw_run.font.size = Pt(10)
+            kw_run.font.color.rgb = RGB_ANTHRACITE
+
+        self.doc.add_page_break()
+
+    # -- 2. Plan ---------------------------------------------------------------
+    def _build_plan(self, fiche: FicheData) -> None:
+        self._section_title("Plan du cours")
 
         subtitle = self.doc.add_paragraph()
         subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -501,7 +616,7 @@ class DocxFicheWriter:
         run.font.color.rgb = RGB_WHITE
 
     def _build_souspartie_table(self, numero: str, sous) -> None:
-        """Construit le tableau Word d'une sous-partie : concept | détail."""
+        """Construit le tableau Word d'une sous-partie (catégorisé + réflexes)."""
         table = self.doc.add_table(rows=1 + len(sous.rows), cols=2)
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
         table.autofit = False
@@ -509,13 +624,17 @@ class DocxFicheWriter:
 
         concept_width = Mm(CONTENT_WIDTH_MM * 0.27)
         detail_width = Mm(CONTENT_WIDTH_MM * 0.73)
+        full_width = Mm(CONTENT_WIDTH_MM)
+        category = CATEGORIES.get(sous.categorie)
 
-        # En-tête : étiquette de partie + titre de sous-partie (répété si coupure).
+        # En-tête : étiquette de partie + titre de sous-partie + catégorie.
         tag_cell, title_cell = table.rows[0].cells
         _shade_cell(tag_cell, RED)
         _shade_cell(title_cell, ROSE_PALE)
         tag_cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
         title_cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+        tag_cell.width = concept_width
+        title_cell.width = detail_width
         _repeat_table_header(table.rows[0])
 
         tag_par = tag_cell.paragraphs[0]
@@ -534,30 +653,55 @@ class DocxFicheWriter:
         title_run.bold = True
         title_run.font.size = Pt(13)
         title_run.font.color.rgb = ROSE_DARK
+        if category:
+            cat_par = title_cell.add_paragraph()
+            cat_par.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            cat_run = cat_par.add_run(category.label.upper())
+            cat_run.font.name = FONT_BODY
+            cat_run.bold = True
+            cat_run.font.size = Pt(7.4)
+            cat_run.font.color.rgb = RGBColor.from_string(category.color.lstrip("#"))
+            _set_char_spacing(cat_run, 18)
 
-        # Lignes : concept (gauche) + détail exhaustif (droite).
+        # Lignes : standard (concept | détail) ou réflexe (pleine largeur).
         for index, row in enumerate(sous.rows, start=1):
-            concept_cell, detail_cell = table.rows[index].cells
-            _shade_cell(concept_cell, CREAM)
-            concept_cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
-            detail_cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
-
-            concept_par = concept_cell.paragraphs[0]
-            concept_par.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            _add_inline_runs(concept_par, row.concept, size=10, bold=True,
-                             keyword_color=False)
-
-            self._fill_detail_cell(detail_cell, row.detail_md)
-
-        for table_row in table.rows:
-            table_row.cells[0].width = concept_width
-            table_row.cells[1].width = detail_width
+            table_row = table.rows[index]
+            if row.kind == "normal":
+                concept_cell, detail_cell = table_row.cells
+                concept_cell.width = concept_width
+                detail_cell.width = detail_width
+                _shade_cell(concept_cell, CREAM)
+                concept_cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+                detail_cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
+                concept_par = concept_cell.paragraphs[0]
+                concept_par.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                _add_inline_runs(concept_par, row.concept, size=10, bold=True,
+                                 keyword_color=False)
+                self._fill_detail_cell(detail_cell, row.detail_md)
+            else:
+                merged = table_row.cells[0].merge(table_row.cells[1])
+                merged.width = full_width
+                merged.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
+                label, color = REFLEXE_TYPES.get(row.kind, ("Encadré", "#E11D48"))
+                fill = {"a_retenir": CREAM, "piege": "FDEDEC",
+                        "mnemo": "FBF6E8"}.get(row.kind, CREAM)
+                _shade_cell(merged, fill)
+                _set_cell_borders(merged, color.lstrip("#"), sz=4, left_accent=22)
+                label_par = merged.paragraphs[0]
+                label_par.paragraph_format.space_before = Pt(2)
+                label_run = label_par.add_run(label.upper())
+                label_run.font.name = FONT_BODY
+                label_run.bold = True
+                label_run.font.size = Pt(8.4)
+                label_run.font.color.rgb = RGBColor.from_string(color.lstrip("#"))
+                _set_char_spacing(label_run, 14)
+                self._fill_detail_cell(merged, row.detail_md)
 
         spacer = self.doc.add_paragraph()
         spacer.paragraph_format.space_after = Pt(4)
 
     def _fill_detail_cell(self, cell, markdown: str) -> None:
-        """Remplit la cellule de détail en convertissant le Markdown."""
+        """Remplit une cellule en convertissant le Markdown."""
         if not markdown.strip():
             return
         self._render_markdown(markdown, container=cell)
@@ -567,34 +711,65 @@ class DocxFicheWriter:
             element = paragraphs[0]._element
             element.getparent().remove(element)
 
-    # -- 4. Synthèse -----------------------------------------------------------
-    def _build_synthese(self, fiche: FicheData) -> None:
-        self._banner("Synthèse — Tableaux de révision")
-        for tableau in fiche.tableaux:
+    # -- 4. Algorithmes décisionnels -------------------------------------------
+    def _build_algorithmes(self, fiche: FicheData) -> None:
+        self._banner("Algorithmes décisionnels")
+        for algo in fiche.algorithmes:
             heading = self.doc.add_paragraph()
             heading.paragraph_format.space_before = Pt(8)
-            run = heading.add_run(tableau.titre)
+            run = heading.add_run(algo.titre)
             run.font.name = FONT_SOFT
             run.bold = True
             run.font.size = Pt(13)
             run.font.color.rgb = RGB_RED
-            self._render_markdown(tableau.markdown, synthese=True)
+
+            box = self.doc.add_table(rows=1, cols=1)
+            box.alignment = WD_TABLE_ALIGNMENT.CENTER
+            box.autofit = False
+            cell = box.rows[0].cells[0]
+            cell.width = Mm(CONTENT_WIDTH_MM)
+            _shade_cell(cell, CREAM)
+            _set_cell_borders(cell, RED, sz=4, left_accent=22)
+            self._fill_detail_cell(cell, algo.arbre_md)
+
+            spacer = self.doc.add_paragraph()
+            spacer.paragraph_format.space_after = Pt(4)
         self.doc.add_page_break()
 
-    # -- 5. À retenir ----------------------------------------------------------
-    def _build_retenir(self, fiche: FicheData, logo_path: Path | None) -> None:
+    # -- 5. Synthèse & chiffres-clés -------------------------------------------
+    def _build_synthese(self, fiche: FicheData) -> None:
+        self._banner("Synthèse — Tableaux de révision")
+        if fiche.chiffres_cles is not None:
+            self._synthese_block("Chiffres-clés à connaître",
+                                  fiche.chiffres_cles.markdown)
+        for tableau in fiche.tableaux:
+            self._synthese_block(tableau.titre, tableau.markdown)
+        self.doc.add_page_break()
+
+    def _synthese_block(self, titre: str, markdown: str) -> None:
+        heading = self.doc.add_paragraph()
+        heading.paragraph_format.space_before = Pt(8)
+        run = heading.add_run(titre)
+        run.font.name = FONT_SOFT
+        run.bold = True
+        run.font.size = Pt(13)
+        run.font.color.rgb = RGB_RED
+        self._render_markdown(markdown, synthese=True)
+
+    # -- 6. Fiche éclair -------------------------------------------------------
+    def _build_eclair(self, fiche: FicheData, logo_path: Path | None) -> None:
         eyebrow = self.doc.add_paragraph()
         eyebrow.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        eyebrow.paragraph_format.space_before = Pt(20)
-        eyebrow_run = eyebrow.add_run("L'ESSENTIEL")
+        eyebrow.paragraph_format.space_before = Pt(16)
+        eyebrow_run = eyebrow.add_run("RÉVISION EXPRESS")
         eyebrow_run.font.name = FONT_BODY
-        eyebrow_run.font.size = Pt(9.5)
+        eyebrow_run.font.size = Pt(9)
         eyebrow_run.font.color.rgb = RGB_GOLD
-        _set_char_spacing(eyebrow_run, 60)
+        _set_char_spacing(eyebrow_run, 56)
 
         title = self.doc.add_paragraph()
         title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        title_run = title.add_run("À retenir absolument")
+        title_run = title.add_run("Fiche éclair")
         title_run.font.name = FONT_TITLE
         title_run.bold = True
         title_run.font.size = Pt(26)
@@ -602,24 +777,29 @@ class DocxFicheWriter:
 
         subtitle = self.doc.add_paragraph()
         subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        subtitle.paragraph_format.space_after = Pt(14)
+        subtitle.paragraph_format.space_after = Pt(12)
         sub_run = subtitle.add_run(fiche.nom_cours)
         sub_run.font.name = FONT_SOFT
         sub_run.italic = True
         sub_run.font.size = Pt(13)
         sub_run.font.color.rgb = RGB_RED
 
-        for point in fiche.points_cles:
-            paragraph = self.doc.add_paragraph(style="List Bullet")
-            paragraph.paragraph_format.space_after = Pt(6)
-            _add_inline_runs(paragraph, point, size=11)
+        if fiche.fiche_eclair_md:
+            self._render_markdown(fiche.fiche_eclair_md)
+
+        if fiche.points_cles:
+            self._info_title("À retenir absolument")
+            for point in fiche.points_cles:
+                paragraph = self.doc.add_paragraph(style="List Bullet")
+                paragraph.paragraph_format.space_after = Pt(4)
+                _add_inline_runs(paragraph, point, size=10.6)
 
         footer = self.doc.add_paragraph()
         footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        footer.paragraph_format.space_before = Pt(20)
+        footer.paragraph_format.space_before = Pt(16)
         if logo_path is not None and logo_path.exists():
             try:
-                footer.add_run().add_picture(str(logo_path), width=Mm(24))
+                footer.add_run().add_picture(str(logo_path), width=Mm(22))
             except Exception:  # noqa: BLE001
                 pass
         footer_text = self.doc.add_paragraph()

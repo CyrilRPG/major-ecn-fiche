@@ -12,7 +12,14 @@ import markdown as md_lib
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from markupsafe import Markup
 
-from major_ecn.config import FICHE_LEGEND, LOGO_PATH, PALETTE, TEMPLATES_DIR
+from major_ecn.config import (
+    CATEGORIES,
+    FICHE_LEGEND,
+    LOGO_PATH,
+    PALETTE,
+    REFLEXE_TYPES,
+    TEMPLATES_DIR,
+)
 from major_ecn.models import FicheData
 
 # Extensions Markdown : tableaux + listes imbriquées fiables.
@@ -86,4 +93,6 @@ def render_fiche_html(fiche: FicheData) -> str:
         palette=PALETTE,
         logo_uri=_file_uri(LOGO_PATH),
         legend=FICHE_LEGEND,
+        categories=CATEGORIES,
+        reflexe_labels={key: label for key, (label, _) in REFLEXE_TYPES.items()},
     )

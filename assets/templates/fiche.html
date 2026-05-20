@@ -8,13 +8,73 @@
 <body>
 
   {# Sources des chaînes dynamiques (en-tête / pied de page) #}
-  <span class="string-source">{{ fiche.nom_cours }}</span>
+  <span class="string-source string-source--cours">{{ fiche.nom_cours }}</span>
   <div class="running-footer">Major ECN&nbsp;&nbsp;&middot;&nbsp;&nbsp;{{ fiche.annee }}</div>
 
   {# ── 1. PAGE DE GARDE ── #}
   {% include 'cover.html' %}
 
-  {# ── 2. PLAN DU COURS ── #}
+  {# ── 2. FICHE SIGNALÉTIQUE ── #}
+  <section class="page entete-page">
+    <h2 class="page-title">Fiche signalétique</h2>
+
+    <div class="meta-grid">
+      {% if fiche.item %}<div class="meta-cell"><span class="meta-k">Item ECN</span>
+        <span class="meta-v">{{ fiche.item }}</span></div>{% endif %}
+      <div class="meta-cell"><span class="meta-k">Matière</span>
+        <span class="meta-v">{{ fiche.matiere }}</span></div>
+      <div class="meta-cell"><span class="meta-k">Lecture estimée</span>
+        <span class="meta-v">≈ {{ fiche.en_tete.duree_lecture }} min</span></div>
+      <div class="meta-cell"><span class="meta-k">Année</span>
+        <span class="meta-v">{{ fiche.annee }}</span></div>
+    </div>
+
+    {% if fiche.en_tete.vignette %}
+    <div class="vignette">
+      <div class="vignette-tag">Vignette clinique</div>
+      <p>{{ fiche.en_tete.vignette }}</p>
+    </div>
+    {% endif %}
+
+    {% if fiche.en_tete.objectifs %}
+    <div class="info-block">
+      <h3 class="info-title">Objectifs d'apprentissage</h3>
+      <ul class="info-list info-list--objectifs">
+        {% for o in fiche.en_tete.objectifs %}<li>{{ o | md_inline }}</li>{% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <div class="info-columns">
+      {% if fiche.en_tete.prerequis %}
+      <div class="info-block">
+        <h3 class="info-title">Prérequis</h3>
+        <ul class="info-list">
+          {% for p in fiche.en_tete.prerequis %}<li>{{ p | md_inline }}</li>{% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      {% if fiche.en_tete.items_lies %}
+      <div class="info-block">
+        <h3 class="info-title">Items & cours liés</h3>
+        <ul class="info-list">
+          {% for i in fiche.en_tete.items_lies %}<li>{{ i | md_inline }}</li>{% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+
+    {% if fiche.en_tete.mots_cles %}
+    <div class="info-block">
+      <h3 class="info-title">Mots-clés</h3>
+      <div class="keyword-cloud">
+        {% for k in fiche.en_tete.mots_cles %}<span class="keyword">{{ k }}</span>{% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </section>
+
+  {# ── 3. PLAN DU COURS ── #}
   <section class="page plan-page">
     <h2 class="page-title">Plan du cours</h2>
     <p class="plan-subtitle">{{ fiche.matiere }}&nbsp;&middot;&nbsp;{{ fiche.nom_cours }}</p>
@@ -22,10 +82,10 @@
     <ol class="plan-list">
       {% for partie in fiche.plan %}
       <li class="plan-partie">
-        <div class="plan-partie-head">
+        <a class="plan-partie-head" href="#partie-{{ loop.index }}">
           <span class="plan-num">{{ partie.numero }}</span>
           <span class="plan-partie-title">{{ partie.titre }}</span>
-        </div>
+        </a>
         {% if partie.resume %}
         <p class="plan-resume">{{ partie.resume }}</p>
         {% endif %}
@@ -45,9 +105,9 @@
     </ol>
   </section>
 
-  {# ── 3. CORPS DE LA FICHE (tableaux structurés) ── #}
+  {# ── 4. CORPS DE LA FICHE (tableaux structurés) ── #}
   {% for partie in fiche.parties %}
-  <section class="page partie-page">
+  <section class="page partie-page" id="partie-{{ loop.index }}">
 
     <div class="partie-banner">
       <span class="partie-banner-num">{{ partie.numero }}</span>
@@ -55,7 +115,8 @@
     </div>
 
     {% for sp in partie.sous_parties %}
-    <table class="fiche-table">
+    {% set cat = categories.get(sp.categorie) %}
+    <table class="fiche-table cat-{{ sp.categorie }}">
       <colgroup>
         <col class="ft-col-concept" />
         <col class="ft-col-detail" />
@@ -63,15 +124,27 @@
       <thead>
         <tr>
           <th class="ft-tag">{{ partie.numero }}</th>
-          <th class="ft-subtitle">{{ sp.lettre }}.&nbsp;&nbsp;{{ sp.titre }}</th>
+          <th class="ft-subtitle">
+            <span class="ft-subtitle-text">{{ sp.lettre }}.&nbsp;&nbsp;{{ sp.titre }}</span>
+            {% if cat %}<span class="ft-cat-chip">{{ cat.label }}</span>{% endif %}
+          </th>
         </tr>
       </thead>
       <tbody>
         {% for row in sp.rows %}
+        {% if row.kind == 'normal' %}
         <tr>
           <td class="ft-concept">{{ row.concept | md_inline }}</td>
           <td class="ft-detail content">{{ row.detail_md | md }}</td>
         </tr>
+        {% else %}
+        <tr class="ft-reflexe ft-reflexe--{{ row.kind }}">
+          <td colspan="2">
+            <span class="ft-reflexe-label">{{ reflexe_labels.get(row.kind, '') }}</span>
+            <span class="ft-reflexe-body content">{{ row.detail_md | md }}</span>
+          </td>
+        </tr>
+        {% endif %}
         {% endfor %}
       </tbody>
     </table>
@@ -90,12 +163,35 @@
   </section>
   {% endfor %}
 
-  {# ── 4. TABLEAUX DE SYNTHÈSE ── #}
-  {% if fiche.tableaux %}
+  {# ── 5. ALGORITHMES DÉCISIONNELS ── #}
+  {% if fiche.algorithmes %}
+  <section class="page algo-page">
+    <div class="partie-banner partie-banner--plain">
+      <span class="partie-banner-title">Algorithmes décisionnels</span>
+    </div>
+    {% for algo in fiche.algorithmes %}
+    <div class="algo-bloc">
+      <h3 class="algo-titre">{{ algo.titre }}</h3>
+      <div class="algo-tree content">{{ algo.arbre_md | md }}</div>
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  {# ── 6. SYNTHÈSE & CHIFFRES-CLÉS ── #}
+  {% if fiche.tableaux or fiche.chiffres_cles %}
   <section class="page synthese-page">
-    <div class="partie-banner partie-banner--synthese">
+    <div class="partie-banner partie-banner--plain">
       <span class="partie-banner-title">Synthèse — Tableaux de révision</span>
     </div>
+
+    {% if fiche.chiffres_cles %}
+    <div class="synthese-bloc">
+      <h3 class="synthese-titre">Chiffres-clés à connaître</h3>
+      <div class="table-synthese table-chiffres content">{{ fiche.chiffres_cles.markdown | md }}</div>
+    </div>
+    {% endif %}
+
     {% for tab in fiche.tableaux %}
     <div class="synthese-bloc">
       <h3 class="synthese-titre">{{ tab.titre }}</h3>
@@ -105,24 +201,29 @@
   </section>
   {% endif %}
 
-  {# ── 5. À RETENIR ABSOLUMENT ── #}
-  {% if fiche.points_cles %}
-  <section class="page retenir-page">
-    <div class="retenir-card">
-      <div class="retenir-eyebrow">L'essentiel</div>
-      <h2 class="retenir-title">À retenir absolument</h2>
-      <p class="retenir-sub">{{ fiche.nom_cours }}</p>
-      <div class="retenir-rule"></div>
-      <ul class="retenir-list">
-        {% for point in fiche.points_cles %}
-        <li>{{ point | md_inline }}</li>
-        {% endfor %}
+  {# ── 7. FICHE ÉCLAIR ── #}
+  {% if fiche.fiche_eclair_md or fiche.points_cles %}
+  <section class="page eclair-page">
+    <div class="eclair-card">
+      <div class="eclair-eyebrow">Révision express</div>
+      <h2 class="eclair-title">Fiche éclair</h2>
+      <p class="eclair-sub">{{ fiche.nom_cours }}</p>
+      <div class="eclair-rule"></div>
+
+      {% if fiche.fiche_eclair_md %}
+      <div class="eclair-body content">{{ fiche.fiche_eclair_md | md }}</div>
+      {% endif %}
+
+      {% if fiche.points_cles %}
+      <h3 class="eclair-points-titre">À retenir absolument</h3>
+      <ul class="eclair-points">
+        {% for point in fiche.points_cles %}<li>{{ point | md_inline }}</li>{% endfor %}
       </ul>
-      <div class="retenir-footer">
-        {% if logo_uri %}
-        <img src="{{ logo_uri }}" alt="Major ECN" class="retenir-logo" />
-        {% endif %}
-        <div class="retenir-footer-text">Major ECN&nbsp;&middot;&nbsp;{{ fiche.annee }}</div>
+      {% endif %}
+
+      <div class="eclair-footer">
+        {% if logo_uri %}<img src="{{ logo_uri }}" alt="Major ECN" class="eclair-logo" />{% endif %}
+        <div class="eclair-footer-text">Major ECN&nbsp;&middot;&nbsp;{{ fiche.annee }}</div>
       </div>
     </div>
   </section>

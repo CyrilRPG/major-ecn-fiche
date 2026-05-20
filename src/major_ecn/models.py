@@ -82,10 +82,15 @@ class PlanPartie:
 
 @dataclass
 class FicheRow:
-    """Ligne de tableau de fiche : concept (colonne gauche) + détail exhaustif."""
+    """Ligne de tableau de fiche.
+
+    `kind` vaut « normal » (concept | détail) ou un type de ligne-réflexe
+    (« a_retenir », « piege », « mnemo ») rendue pleine largeur.
+    """
 
     concept: str
     detail_md: str = ""
+    kind: str = "normal"
 
 
 @dataclass
@@ -94,6 +99,7 @@ class SousPartie:
 
     lettre: str
     titre: str
+    categorie: str = "generalites"
     rows: list[FicheRow] = field(default_factory=list)
     images: list[AnalyzedImage] = field(default_factory=list)
 
@@ -109,10 +115,30 @@ class Partie:
 
 @dataclass
 class TableauSynthese:
-    """Tableau de synthèse final (Markdown)."""
+    """Tableau de synthèse (Markdown)."""
 
     titre: str
     markdown: str
+
+
+@dataclass
+class Algorithme:
+    """Arbre décisionnel (démarche diagnostique ou thérapeutique)."""
+
+    titre: str
+    arbre_md: str
+
+
+@dataclass
+class FicheEnTete:
+    """En-tête signalétique de la fiche (objectifs, prérequis, vignette…)."""
+
+    objectifs: list[str] = field(default_factory=list)
+    prerequis: list[str] = field(default_factory=list)
+    mots_cles: list[str] = field(default_factory=list)
+    items_lies: list[str] = field(default_factory=list)
+    vignette: str = ""
+    duree_lecture: int = 0
 
 
 @dataclass
@@ -142,10 +168,14 @@ class FicheData:
     nom_cours: str
     annee: str
     item: str = ""
+    en_tete: FicheEnTete = field(default_factory=FicheEnTete)
     plan: list[PlanPartie] = field(default_factory=list)
     parties: list[Partie] = field(default_factory=list)
+    algorithmes: list[Algorithme] = field(default_factory=list)
     tableaux: list[TableauSynthese] = field(default_factory=list)
+    chiffres_cles: TableauSynthese | None = None
     points_cles: list[str] = field(default_factory=list)
+    fiche_eclair_md: str = ""
     images: list[AnalyzedImage] = field(default_factory=list)
     fiche_numero: str = ""
     usage: UsageStats = field(default_factory=UsageStats)

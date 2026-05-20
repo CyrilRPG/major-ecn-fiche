@@ -18,6 +18,7 @@ from anthropic import AsyncAnthropic
 from major_ecn.ai_processor import AIProcessor
 from major_ecn.image_analyzer import ImageAnalyzer
 from major_ecn.models import (
+    Algorithme,
     AnalyzedImage,
     ExtractedDocument,
     FicheData,
@@ -28,7 +29,7 @@ from major_ecn.models import (
     SousPartie,
     TableauSynthese,
 )
-from major_ecn.config import Settings
+from major_ecn.config import CATEGORIES, DEFAULT_CATEGORY, READING_SPEED_WPM, Settings
 from major_ecn.pdf_extractor import normalize_image_to_png
 from major_ecn.utils.logger import get_logger
 from major_ecn.utils.slugify import slugify, strip_accents, titlecase_fr
@@ -40,6 +41,8 @@ _LETTER_RE = re.compile(r"^\s{0,6}([A-Z])[.)]\s+(.+)$")
 _TITLE_RE = re.compile(r"^\*\*(.+?)\*\*\s*[:：–-]?\s*(.*)$", re.DOTALL)
 _HEADING_RE = re.compile(r"^\s*#{1,6}\s+(.*)$")
 _LIGNE_RE = re.compile(r"^\s*\[(?:LIGNE|ROW|LINE)\]\s*(.*)$", re.IGNORECASE)
+_REFLEXE_RE = re.compile(r"^\s*\[(RETENIR|PIEGE|MNEMO)\]\s*(.*)$", re.IGNORECASE)
+_REFLEXE_KIND = {"RETENIR": "a_retenir", "PIEGE": "piege", "MNEMO": "mnemo"}
 
 
 # ── Helpers de parsing ────────────────────────────────────────────────────────
@@ -119,8 +122,9 @@ def parse_plan(plan_md: str) -> list[PlanPartie]:
 def parse_section(section_md: str, numero: str, fallback_title: str) -> Partie:
     """Transforme le Markdown d'une partie (étape 2) en `Partie` (tableaux).
 
-    Chaque sous-partie (A., B., …) devient un tableau ; chaque balise `[LIGNE]`
-    ouvre une ligne « concept | détail ».
+    Chaque sous-partie (A., B., …) devient un tableau catégorisé ; `[LIGNE]`
+    ouvre une ligne « concept | détail », `[RETENIR]/[PIEGE]/[MNEMO]` une
+    ligne-réflexe pleine largeur.
     """
     lines = section_md.splitlines()
     partie = Partie(numero=numero, titre=fallback_title)
@@ -153,24 +157,41 @@ def parse_section(section_md: str, numero: str, fallback_title: str) -> Partie:
         roman = _ROMAN_RE.match(line)
         letter = _LETTER_RE.match(line)
         ligne = _LIGNE_RE.match(line)
+        reflexe = _REFLEXE_RE.match(line)
         is_bullet = bool(re.match(r"[-*+]\s", stripped))
 
         # Titre de la grande partie (première occurrence).
-        if not title_found and roman and not is_bullet and not ligne:
+        if not title_found and roman and not is_bullet and not ligne and not reflexe:
             title, _ = _split_title_resume(roman.group(2))
             partie.titre = title or fallback_title
             title_found = True
             continue
 
-        # Entête de sous-partie (A., B., …).
-        if letter and not is_bullet and not ligne:
+        # Entête de sous-partie (A., B., …) + catégorie sémantique.
+        if letter and not is_bullet and not ligne and not reflexe:
             _flush_row()
-            title, _ = _split_title_resume(letter.group(2))
-            current_sp = SousPartie(lettre=letter.group(1), titre=title)
+            body = letter.group(2)
+            cat_match = re.search(r"@([a-zA-Zé]+)", body)
+            categorie = (cat_match.group(1).lower() if cat_match else DEFAULT_CATEGORY)
+            if categorie not in CATEGORIES:
+                categorie = DEFAULT_CATEGORY
+            title, _ = _split_title_resume(re.sub(r"@[a-zA-Zé]+", "", body).strip())
+            current_sp = SousPartie(lettre=letter.group(1), titre=title,
+                                    categorie=categorie)
             sous_parties.append(current_sp)
             continue
 
-        # Nouvelle ligne de tableau.
+        # Ligne-réflexe (à retenir / piège / mnémo).
+        if reflexe:
+            _flush_row()
+            kind = _REFLEXE_KIND[reflexe.group(1).upper()]
+            current_row = FicheRow(concept="", kind=kind)
+            _ensure_sp().rows.append(current_row)
+            if reflexe.group(2).strip():
+                detail_lines.append(reflexe.group(2).strip())
+            continue
+
+        # Nouvelle ligne de tableau standard.
         if ligne:
             _flush_row()
             concept = ligne.group(1).strip().strip("*").strip()
@@ -205,16 +226,12 @@ def parse_section(section_md: str, numero: str, fallback_title: str) -> Partie:
     return partie
 
 
-def parse_synthesis(synthesis_md: str) -> tuple[list[TableauSynthese], list[str]]:
-    """Sépare les tableaux de synthèse et les points à retenir (étape 3)."""
-    tableaux: list[TableauSynthese] = []
-    points: list[str] = []
-
-    # Découpe en blocs sur les titres « ### ».
+def _split_heading_blocks(text: str) -> list[tuple[str, list[str]]]:
+    """Découpe un Markdown en blocs (titre « ### », lignes de contenu)."""
     blocks: list[tuple[str, list[str]]] = []
     current_title = ""
     current_lines: list[str] = []
-    for raw_line in synthesis_md.splitlines():
+    for raw_line in text.splitlines():
         heading = _HEADING_RE.match(raw_line)
         if heading:
             if current_title or current_lines:
@@ -225,8 +242,18 @@ def parse_synthesis(synthesis_md: str) -> tuple[list[TableauSynthese], list[str]
             current_lines.append(raw_line)
     if current_title or current_lines:
         blocks.append((current_title, current_lines))
+    return blocks
 
-    for title, body_lines in blocks:
+
+def parse_synthesis(
+    synthesis_md: str,
+) -> tuple[list[TableauSynthese], TableauSynthese | None, list[str]]:
+    """Sépare tableaux de synthèse, chiffres-clés et points à retenir (étape 3)."""
+    tableaux: list[TableauSynthese] = []
+    chiffres: TableauSynthese | None = None
+    points: list[str] = []
+
+    for title, body_lines in _split_heading_blocks(synthesis_md):
         body = "\n".join(body_lines).strip()
         normalized = strip_accents(title).lower()
         if "points a retenir" in normalized or "retenir absolument" in normalized:
@@ -236,15 +263,38 @@ def parse_synthesis(synthesis_md: str) -> tuple[list[TableauSynthese], list[str]
                     cleaned = item.lstrip("-*• ").strip()
                     if cleaned:
                         points.append(cleaned)
+        elif "chiffre" in normalized and "|" in body:
+            chiffres = TableauSynthese(titre="Chiffres-clés", markdown=body)
         elif "|" in body:
             tableaux.append(TableauSynthese(titre=title or "Tableau de synthèse",
                                             markdown=body))
 
     # Repli : pas de titres « ### » mais des tableaux bruts présents.
-    if not tableaux and "|" in synthesis_md:
+    if not tableaux and chiffres is None and "|" in synthesis_md:
         tableaux.append(TableauSynthese(titre="Tableaux de synthèse",
                                         markdown=synthesis_md.strip()))
-    return tableaux, points
+    return tableaux, chiffres, points
+
+
+def parse_extras(extras_md: str) -> tuple[list[Algorithme], str]:
+    """Sépare les algorithmes décisionnels et la fiche éclair (étape 4)."""
+    algorithmes: list[Algorithme] = []
+    fiche_eclair = ""
+    for title, body_lines in _split_heading_blocks(extras_md):
+        body = "\n".join(body_lines).strip()
+        if not body:
+            continue
+        normalized = strip_accents(title).lower()
+        if normalized.startswith("algorithme"):
+            label = re.sub(r"^algorithme\s*[—\-–:]*\s*", "", title,
+                           flags=re.IGNORECASE).strip()
+            algorithmes.append(
+                Algorithme(titre=label or "Arbre décisionnel",
+                           arbre_md=_normalize_indentation(body))
+            )
+        elif "fiche eclair" in normalized:
+            fiche_eclair = body
+    return algorithmes, fiche_eclair
 
 
 # ── Placement des images ──────────────────────────────────────────────────────
@@ -338,10 +388,15 @@ async def build_fiche(
         section_md = await processor.write_section(plan_result.plan_md, plan_partie.numero)
         parties.append(parse_section(section_md, plan_partie.numero, plan_partie.titre))
 
-    # Étape 3 — tableaux de synthèse + points à retenir.
+    # Étape 3 — tableaux de synthèse, chiffres-clés, points à retenir.
     _progress("synthèse")
     synthesis_md = await processor.generate_synthesis()
-    tableaux, points_cles = parse_synthesis(synthesis_md)
+    tableaux, chiffres_cles, points_cles = parse_synthesis(synthesis_md)
+
+    # Étape 4 — algorithmes décisionnels + fiche éclair.
+    _progress("algorithmes & fiche éclair")
+    extras_md = await processor.generate_extras()
+    algorithmes, fiche_eclair_md = parse_extras(extras_md)
 
     # Récupération de l'analyse vision et placement des images.
     _progress("images")
@@ -352,20 +407,42 @@ async def build_fiche(
     usage = processor.usage
     usage.add(analyzer.usage)
 
+    en_tete = plan_result.en_tete
+    en_tete.duree_lecture = _estimate_reading_time(parties, tableaux, fiche_eclair_md)
+
     fiche = FicheData(
         matiere=titlecase_fr(matiere),
         nom_cours=nom_cours,
         annee=settings.year,
         item=plan_result.item,
+        en_tete=en_tete,
         plan=plan_parties,
         parties=parties,
+        algorithmes=algorithmes,
         tableaux=tableaux,
+        chiffres_cles=chiffres_cles,
         points_cles=points_cles,
+        fiche_eclair_md=fiche_eclair_md,
         images=[img for img in analyzed_images if img.is_relevant],
         fiche_numero=_fiche_numero(plan_result.item),
         usage=usage,
     )
     return fiche
+
+
+def _estimate_reading_time(
+    parties: list[Partie], tableaux: list[TableauSynthese], fiche_eclair: str
+) -> int:
+    """Estime la durée de lecture de la fiche en minutes."""
+    words = len(fiche_eclair.split())
+    for tableau in tableaux:
+        words += len(tableau.markdown.split())
+    for partie in parties:
+        words += len(partie.titre.split())
+        for sous in partie.sous_parties:
+            for row in sous.rows:
+                words += len(row.concept.split()) + len(row.detail_md.split())
+    return max(1, round(words / READING_SPEED_WPM))
 
 
 def _fiche_numero(item: str) -> str:

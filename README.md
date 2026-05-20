@@ -5,9 +5,9 @@
 
 `major-ecn-generator` est un logiciel en ligne de commande (CLI) pour macOS qui
 lit un dossier de PDF de cours, les retravaille avec l'IA Claude (Anthropic) en
-trois étapes (plan → rédaction exhaustive → tableaux de synthèse), analyse les
-schémas par vision, puis produit des fiches élégantes selon une charte
-« luxe médical ».
+quatre étapes (plan + en-tête → rédaction exhaustive en tableaux → synthèse &
+chiffres-clés → algorithmes & fiche éclair), analyse les schémas par vision,
+puis produit des fiches élégantes selon une charte « luxe médical ».
 
 ```
 major-ecn /chemin/vers/Cardiologie
@@ -18,8 +18,18 @@ major-ecn /chemin/vers/Cardiologie
 
 ## ✨ Fonctionnalités
 
-- **Pipeline IA en 3 étapes** : plan détaillé, rédaction exhaustive partie par
-  partie, tableaux de synthèse — avec partage de contexte et *prompt caching*.
+- **Pipeline IA en 4 étapes** : plan + en-tête signalétique, rédaction
+  exhaustive en tableaux, synthèse & chiffres-clés, algorithmes & fiche éclair
+  — avec partage de contexte et *prompt caching*.
+- **Corps 100 % en tableaux** : organisation « concept | détail exhaustif »
+  par sous-partie, sous-tableaux de comparaison, lignes-réflexe intégrées
+  (à retenir / piège / mnémo).
+- **Enrichissements pédagogiques** : fiche signalétique (objectifs, prérequis,
+  mots-clés, items liés, vignette clinique, durée de lecture), chiffres-clés,
+  algorithmes décisionnels, fiche éclair de révision express.
+- **Repères & ergonomie** : catégories sémantiques colorées, marqueurs
+  ★ / ◆ / ⚠ avec légende, sommaire cliquable, signets PDF, en-tête de
+  navigation indiquant la section courante.
 - **Analyse d'images par vision** : chaque schéma du PDF est noté ; seuls les
   plus pertinents (≥ 6/10) sont conservés et replacés dans la bonne section.
 - **Double export** : PDF (WeasyPrint) et Word (python-docx), mise en page
@@ -145,9 +155,9 @@ src/major_ecn/
 ├── cli.py             # Point d'entrée Typer
 ├── config.py          # Charte, modèles, paramètres
 ├── models.py          # Modèles de données (FicheData…)
-├── prompts.py         # Prompts des 3 étapes + vision
+├── prompts.py         # Prompts des 4 étapes + vision
 ├── pdf_extractor.py   # Extraction texte + images (PyMuPDF, OCR)
-├── ai_processor.py    # Pipeline IA en 3 étapes (chaining + caching)
+├── ai_processor.py    # Pipeline IA en 4 étapes (chaining + caching)
 ├── image_analyzer.py  # Scoring des images par Claude Vision
 ├── content_builder.py # Assemblage + parsing en FicheData
 ├── html_renderer.py   # Markdown → HTML (Jinja2)
@@ -160,12 +170,13 @@ src/major_ecn/
 ### Pipeline (par PDF)
 
 1. Extraction du texte et des images (repli OCR si PDF scanné).
-2. Étape 1 IA — plan détaillé + nom du cours.
+2. Étape 1 IA — plan détaillé + en-tête signalétique (objectifs, vignette…).
 3. Analyse vision des images (en parallèle des étapes suivantes).
-4. Étape 2 IA — rédaction exhaustive partie par partie.
-5. Étape 3 IA — tableaux de synthèse + points à retenir.
-6. Placement des images pertinentes dans les sections.
-7. Rendu HTML, puis export PDF et DOCX.
+4. Étape 2 IA — rédaction exhaustive en tableaux, partie par partie.
+5. Étape 3 IA — tableaux de synthèse, chiffres-clés, points à retenir.
+6. Étape 4 IA — algorithmes décisionnels + fiche éclair.
+7. Placement des images pertinentes dans les sections.
+8. Rendu HTML, puis export PDF et DOCX.
 
 ---
 

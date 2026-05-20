@@ -5,6 +5,7 @@ from __future__ import annotations
 from major_ecn.content_builder import (
     _normalize_indentation,
     output_basename,
+    parse_extras,
     parse_plan,
     parse_section,
     parse_synthesis,
@@ -41,10 +42,26 @@ SYNTHESIS_MD = """\
 | 1 | 140-159 | 90-99 |
 | 2 | 160-179 | 100-109 |
 
+### CHIFFRES-CLÉS
+| Paramètre | Valeur |
+|-----------|--------|
+| Seuil HTA | 140/90 |
+
 ### POINTS À RETENIR ABSOLUMENT
 - L'HTA se définit par une PA ≥ 140/90.
 - La MAPA confirme le diagnostic.
 - Le traitement combine mesures et médicaments.
+"""
+
+EXTRAS_MD = """\
+### ALGORITHME — Démarche diagnostique
+- PA ≥ 140/90
+  - OUI → confirmer
+  - NON → pas d'HTA
+
+### FICHE ÉCLAIR
+- HTA = PA ≥ 140/90 mmHg
+- MAPA = référence
 """
 
 
@@ -86,12 +103,35 @@ def test_parse_section_fallback_without_rows() -> None:
 
 
 def test_parse_synthesis() -> None:
-    tableaux, points = parse_synthesis(SYNTHESIS_MD)
+    tableaux, chiffres, points = parse_synthesis(SYNTHESIS_MD)
     assert len(tableaux) == 1
     assert tableaux[0].titre == "Grades de sévérité"
     assert "|" in tableaux[0].markdown
+    assert chiffres is not None
+    assert "Seuil HTA" in chiffres.markdown
     assert len(points) == 3
     assert points[0].startswith("L'HTA")
+
+
+def test_parse_extras() -> None:
+    algorithmes, fiche_eclair = parse_extras(EXTRAS_MD)
+    assert len(algorithmes) == 1
+    assert algorithmes[0].titre == "Démarche diagnostique"
+    assert "OUI" in algorithmes[0].arbre_md
+    assert "MAPA" in fiche_eclair
+
+
+def test_parse_section_categories_and_reflexe() -> None:
+    section = (
+        "I. **Partie**\n\nA. **Diagnostic** @paraclinique\n"
+        "[LIGNE] Examen clé\n- détail\n"
+        "[PIEGE] Erreur fréquente à éviter\n"
+    )
+    partie = parse_section(section, "I", "Repli")
+    sous = partie.sous_parties[0]
+    assert sous.categorie == "paraclinique"
+    kinds = [row.kind for row in sous.rows]
+    assert "normal" in kinds and "piege" in kinds
 
 
 def test_normalize_indentation_levels() -> None:

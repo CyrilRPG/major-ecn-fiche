@@ -90,11 +90,39 @@ FICHE_LEGEND: tuple[LegendEntry, ...] = (
                 "Erreur fréquemment commise ou confusion à éviter — vigilance requise."),
 )
 
+# ── Catégories sémantiques des sous-parties ───────────────────────────────────
+@dataclass(frozen=True)
+class Category:
+    """Catégorie sémantique d'une sous-partie (code couleur + libellé)."""
+
+    key: str
+    label: str
+    color: str
+
+
+CATEGORIES: dict[str, Category] = {
+    "generalites": Category("generalites", "Généralités", "#64748B"),
+    "physiopathologie": Category("physiopathologie", "Physiopathologie", "#0F766E"),
+    "clinique": Category("clinique", "Clinique", "#B45309"),
+    "paraclinique": Category("paraclinique", "Diagnostic & examens", "#1D4ED8"),
+    "traitement": Category("traitement", "Prise en charge", "#15803D"),
+    "suivi": Category("suivi", "Pronostic & suivi", "#7E22CE"),
+}
+DEFAULT_CATEGORY = "generalites"
+
+# ── Lignes-réflexe intégrées aux tableaux (libellé + couleur) ─────────────────
+REFLEXE_TYPES: dict[str, tuple[str, str]] = {
+    "a_retenir": ("À retenir", "#E11D48"),
+    "piege": ("Piège", "#B91C1C"),
+    "mnemo": ("Moyen mnémotechnique", "#9A7B33"),
+}
+
 # ── Paramètres métier ─────────────────────────────────────────────────────────
 DEFAULT_YEAR = "2025-2026"
 IMAGE_RELEVANCE_THRESHOLD = 6  # Note minimale de pertinence pédagogique (0-10)
 MIN_IMAGE_DIMENSION_PX = 90    # En dessous : image considérée décorative (icône)
 SCANNED_TEXT_THRESHOLD = 120   # Caractères par page en dessous desquels on tente l'OCR
+READING_SPEED_WPM = 170        # Mots/minute pour estimer la durée de lecture
 
 
 @dataclass

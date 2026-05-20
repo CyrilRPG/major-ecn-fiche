@@ -94,12 +94,20 @@
     vertical-align: bottom;
     padding-bottom: 2.4mm;
   }
-  @top-right {
+  @top-center {
     content: string(course-name);
     font-family: var(--sans);
     font-size: 8pt;
-    font-style: italic;
     color: var(--pearl);
+    vertical-align: bottom;
+    padding-bottom: 2.4mm;
+  }
+  @top-right {
+    content: string(section-courante);
+    font-family: var(--sans);
+    font-size: 8pt;
+    font-style: italic;
+    color: var(--red);
     vertical-align: bottom;
     padding-bottom: 2.4mm;
   }
@@ -115,6 +123,7 @@
   margin: 0;
   border: none;
   @top-left { content: none; }
+  @top-center { content: none; }
   @top-right { content: none; }
   @bottom-center { content: none; }
 }
@@ -130,13 +139,17 @@ html, body {
 }
 
 /* Sources des chaînes dynamiques (hors flux visible). */
-.string-source {
+.string-source--cours {
   string-set: course-name content();
   position: absolute;
   top: 0;
   left: -300mm;
   font-size: 1pt;
   color: transparent;
+}
+/* Section courante affichée dans l'en-tête de page. */
+.page-title, .partie-banner-title, .eclair-title {
+  string-set: section-courante content();
 }
 .running-footer {
   position: running(pagefooter);
@@ -149,6 +162,11 @@ html, body {
 }
 
 .page { break-before: page; }
+
+/* Signets PDF (plan de navigation). */
+.page-title { bookmark-level: 1; }
+.partie-banner-title { bookmark-level: 1; }
+.ft-subtitle-text { bookmark-level: 2; }
 
 /* ════════════════════════════════════════════════════════════════════════════
    1. PAGE DE GARDE
@@ -331,8 +349,11 @@ html, body {
   break-inside: avoid;
 }
 .plan-partie-head {
+  display: block;
   border-bottom: 0.6pt solid var(--cream);
   padding-bottom: 1.6mm;
+  text-decoration: none;
+  color: inherit;
 }
 .plan-num {
   font-family: var(--serif);
@@ -380,6 +401,105 @@ html, body {
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
+   2 bis. FICHE SIGNALÉTIQUE (en-tête)
+   ════════════════════════════════════════════════════════════════════════════ */
+.meta-grid {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  margin: 7mm 0;
+}
+.meta-cell {
+  display: table-cell;
+  width: 25%;
+  padding: 3.4mm 3mm;
+  text-align: center;
+  border: 0.5pt solid var(--pearl);
+  background: var(--cream);
+}
+.meta-k {
+  display: block;
+  font-family: var(--sans);
+  font-size: 7.6pt;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pearl);
+  margin-bottom: 1.4mm;
+}
+.meta-v {
+  display: block;
+  font-family: var(--serif-soft);
+  font-weight: 700;
+  font-size: 13pt;
+  color: var(--red);
+}
+
+.vignette {
+  background: #FFFBF4;
+  border: 0.6pt solid var(--gold);
+  border-left: 2.6mm solid var(--gold);
+  padding: 4mm 5mm;
+  margin: 7mm 0;
+}
+.vignette-tag {
+  font-family: var(--sans);
+  font-size: 8pt;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #9A7B33;
+  margin-bottom: 1.8mm;
+}
+.vignette p {
+  font-family: var(--serif-soft);
+  font-size: 11.5pt;
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--anthracite);
+}
+
+.info-block { margin: 6mm 0; }
+.info-title {
+  font-family: var(--serif-soft);
+  font-weight: 700;
+  font-size: 13pt;
+  color: var(--red);
+  padding-bottom: 1.4mm;
+  margin-bottom: 2.4mm;
+  border-bottom: 0.6pt solid var(--cream);
+}
+.info-list { padding-left: 5mm; }
+.info-list li {
+  margin: 1.8mm 0;
+  padding-left: 1.4mm;
+  font-size: 10.5pt;
+  line-height: 1.45;
+}
+.info-list li::marker { color: var(--gold); }
+.info-list--objectifs li::marker { color: var(--red); }
+.info-columns { display: table; width: 100%; table-layout: fixed; }
+.info-columns .info-block {
+  display: table-cell;
+  width: 50%;
+  padding-right: 6mm;
+  vertical-align: top;
+}
+.keyword-cloud { line-height: 2; }
+.keyword {
+  display: inline-block;
+  margin: 0 1.6mm 1.6mm 0;
+  padding: 1mm 3mm;
+  background: var(--cream);
+  border: 0.5pt solid var(--gold);
+  border-radius: 2.4mm;
+  font-family: var(--sans);
+  font-size: 9pt;
+  color: var(--anthracite);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
    3. CORPS DE LA FICHE
    ════════════════════════════════════════════════════════════════════════════ */
 .partie-banner {
@@ -403,7 +523,7 @@ html, body {
   font-weight: 700;
   font-size: 17pt;
 }
-.partie-banner--synthese .partie-banner-title { padding-left: 1mm; }
+.partie-banner--plain .partie-banner-title { padding-left: 1mm; }
 
 /* ── Tableaux de fiche : concept (gauche) + détail exhaustif (droite) ─────── */
 .fiche-table {
@@ -468,6 +588,58 @@ html, body {
 .ft-detail ul, .ft-detail ol { margin: 1mm 0 1mm 2mm; padding-left: 3mm; }
 .ft-detail li { margin: 0.8mm 0; }
 .ft-detail table { margin: 2.4mm 0; font-size: 9pt; }
+
+/* Catégories sémantiques (couleur d'accent par sous-partie). */
+.cat-generalites { --cat: #64748B; }
+.cat-physiopathologie { --cat: #0F766E; }
+.cat-clinique { --cat: #B45309; }
+.cat-paraclinique { --cat: #1D4ED8; }
+.cat-traitement { --cat: #15803D; }
+.cat-suivi { --cat: #7E22CE; }
+
+.ft-subtitle { border-bottom: 1.8pt solid var(--cat, var(--gold)); }
+.ft-subtitle-text { display: block; }
+.ft-cat-chip {
+  display: inline-block;
+  margin-top: 1.6mm;
+  padding: 0.6mm 2.6mm;
+  background: var(--cat, var(--pearl));
+  color: #fff;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-style: normal;
+  font-size: 7.4pt;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 2mm;
+}
+
+/* Lignes-réflexe (à retenir / piège / mnémo), pleine largeur. */
+.ft-reflexe td {
+  border: 0.5pt solid var(--pearl);
+  border-left: 2.4mm solid var(--pearl);
+  padding: 2.6mm 4mm;
+  vertical-align: top;
+}
+.ft-reflexe--a_retenir td { border-left-color: var(--red); background: var(--cream); }
+.ft-reflexe--piege td { border-left-color: #B91C1C; background: #FDEDEC; }
+.ft-reflexe--mnemo td { border-left-color: var(--gold); background: #FBF6E8; }
+.ft-reflexe-label {
+  display: block;
+  margin-bottom: 1mm;
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 8.4pt;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.ft-reflexe--a_retenir .ft-reflexe-label { color: var(--red); }
+.ft-reflexe--piege .ft-reflexe-label { color: #B91C1C; }
+.ft-reflexe--mnemo .ft-reflexe-label { color: #9A7B33; }
+.ft-reflexe-body { display: block; }
+.ft-reflexe-body > :first-child { margin-top: 0; }
+.ft-reflexe-body > :last-child { margin-bottom: 0; }
+.ft-reflexe-body ul { margin: 0.5mm 0 0.5mm 2mm; padding-left: 3mm; }
 
 /* Marqueurs de légende insérés dans le contenu. */
 .fmark { font-weight: 700; }
@@ -554,8 +726,33 @@ thead { display: table-header-group; }
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   5. TABLEAUX DE SYNTHÈSE
+   5. ALGORITHMES, SYNTHÈSE & CHIFFRES-CLÉS
    ════════════════════════════════════════════════════════════════════════════ */
+.algo-bloc {
+  margin: 6mm 0;
+  break-inside: avoid;
+}
+.algo-titre {
+  font-family: var(--serif-soft);
+  font-weight: 700;
+  font-size: 13pt;
+  color: var(--red);
+  padding-bottom: 1.2mm;
+  margin-bottom: 2.4mm;
+  border-bottom: 0.6pt solid var(--cream);
+}
+.algo-tree {
+  background: var(--cream);
+  border-left: 2.4mm solid var(--red);
+  padding: 3.4mm 5mm;
+  font-size: 9.8pt;
+}
+.algo-tree ul { margin: 0.6mm 0 0.6mm 4mm; padding-left: 3mm; }
+.algo-tree li { margin: 1.2mm 0; }
+.algo-tree li::marker { color: var(--red); }
+.algo-tree ul ul li::marker { color: var(--gold); }
+.algo-tree strong { color: var(--red); }
+
 .synthese-bloc {
   margin: 6mm 0;
   break-inside: avoid;
@@ -575,70 +772,85 @@ thead { display: table-header-group; }
 .table-synthese tbody tr:nth-child(odd) { background: #fff; }
 .table-synthese tbody tr:nth-child(even) { background: var(--cream); }
 
-/* ════════════════════════════════════════════════════════════════════════════
-   6. À RETENIR ABSOLUMENT
-   ════════════════════════════════════════════════════════════════════════════ */
-.retenir-card {
-  border: 0.9pt solid var(--gold);
-  background: var(--cream);
-  padding: 18mm 16mm;
-  margin-top: 14mm;
-  text-align: center;
+.table-chiffres th {
+  background: #9A7B33;
+  border-color: #9A7B33;
 }
-.retenir-eyebrow {
+.table-chiffres td:first-child { font-weight: 700; }
+.table-chiffres td:first-child strong { color: var(--anthracite); }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   6. FICHE ÉCLAIR
+   ════════════════════════════════════════════════════════════════════════════ */
+.eclair-card {
+  background: var(--cream);
+  border-top: 2.2pt solid var(--red);
+  padding: 12mm 13mm 14mm 13mm;
+  margin-top: 4mm;
+}
+.eclair-eyebrow {
+  text-align: center;
   font-family: var(--sans);
-  font-size: 9.5pt;
-  letter-spacing: 0.34em;
+  font-size: 9pt;
+  letter-spacing: 0.32em;
   text-transform: uppercase;
   color: var(--gold);
 }
-.retenir-title {
+.eclair-title {
+  text-align: center;
   font-family: var(--serif);
   font-weight: 700;
   font-size: 27pt;
   color: var(--anthracite);
-  margin-top: 3mm;
+  margin-top: 2.4mm;
 }
-.retenir-sub {
+.eclair-sub {
+  text-align: center;
   font-family: var(--serif-soft);
   font-style: italic;
   font-size: 13pt;
   color: var(--red);
-  margin-top: 1.5mm;
+  margin-top: 1mm;
 }
-.retenir-rule {
+.eclair-rule {
   width: 42mm;
   height: 0.9pt;
   background: var(--gold);
-  margin: 7mm auto;
+  margin: 6mm auto 7mm auto;
 }
-.retenir-list {
-  text-align: left;
-  margin: 0 4mm;
-  padding-left: 7mm;
+.eclair-body { font-size: 10.2pt; }
+.eclair-body strong { color: #BE123C; }
+.eclair-body ul { margin: 1.4mm 0 1.4mm 4mm; padding-left: 3mm; }
+.eclair-body li { margin: 1mm 0; }
+.eclair-body li::marker { color: var(--red); }
+.eclair-points-titre {
+  font-family: var(--serif-soft);
+  font-weight: 700;
+  font-size: 13pt;
+  color: var(--red);
+  margin: 7mm 0 2.6mm 0;
+  padding-bottom: 1.2mm;
+  border-bottom: 0.6pt solid var(--gold);
 }
-.retenir-list li {
-  margin: 4.4mm 0;
-  padding-left: 2.4mm;
-  font-size: 11pt;
+.eclair-points { padding-left: 6mm; }
+.eclair-points li {
+  margin: 2.6mm 0;
+  padding-left: 1.6mm;
+  font-size: 10.6pt;
   line-height: 1.45;
 }
-.retenir-list li::marker {
-  content: "\25C6";
-  color: var(--red);
-  font-size: 8.5pt;
-}
-.retenir-list strong { color: #BE123C; }
-.retenir-footer {
-  margin-top: 12mm;
+.eclair-points li::marker { color: var(--red); }
+.eclair-points strong { color: #BE123C; }
+.eclair-footer {
+  margin-top: 10mm;
   text-align: center;
 }
-.retenir-logo {
+.eclair-logo {
   display: block;
-  max-width: 26mm;
+  max-width: 24mm;
   margin: 0 auto 2.4mm auto;
 }
-.retenir-footer-text {
+.eclair-footer-text {
   font-family: var(--sans);
   font-size: 8.5pt;
   letter-spacing: 0.18em;

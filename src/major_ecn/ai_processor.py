@@ -19,23 +19,40 @@ from major_ecn.config import (
     Settings,
     model_pricing,
 )
-from major_ecn.models import UsageStats
+from major_ecn.models import FicheEnTete, UsageStats
 from major_ecn.prompts import (
     COURSE_CONTEXT,
     STEP1_PLAN,
     STEP2_SECTION,
     STEP3_SYNTHESIS,
+    STEP4_EXTRAS,
     SYSTEM_WRITER,
 )
 from major_ecn.utils.retry import retry_async
 
 # Plafonds de tokens en sortie par étape.
-_MAX_TOKENS_PLAN = 3_000
+_MAX_TOKENS_PLAN = 4_500
 _MAX_TOKENS_SECTION = 8_000
 _MAX_TOKENS_SYNTHESIS = 8_000
+_MAX_TOKENS_EXTRAS = 5_000
 
-_NOM_COURS_RE = re.compile(r"<nom_cours>\s*(.*?)\s*</nom_cours>", re.IGNORECASE | re.DOTALL)
-_ITEM_RE = re.compile(r"<item>\s*(.*?)\s*</item>", re.IGNORECASE | re.DOTALL)
+_TAG_BLOCK_RE = re.compile(r"<([a-z_]+)>(.*?)</\1>", re.IGNORECASE | re.DOTALL)
+
+
+def _extract_tag(raw: str, name: str) -> str:
+    """Extrait le contenu texte d'une balise `<name>…</name>`."""
+    match = re.search(rf"<{name}>\s*(.*?)\s*</{name}>", raw, re.IGNORECASE | re.DOTALL)
+    return match.group(1).strip() if match else ""
+
+
+def _extract_list(raw: str, name: str) -> list[str]:
+    """Extrait une liste à puces contenue dans une balise `<name>…</name>`."""
+    items: list[str] = []
+    for line in _extract_tag(raw, name).splitlines():
+        cleaned = line.strip().lstrip("-*•").strip()
+        if cleaned:
+            items.append(cleaned)
+    return items
 
 
 class AIProcessingError(RuntimeError):
@@ -43,12 +60,14 @@ class AIProcessingError(RuntimeError):
 
 
 class PlanResult:
-    """Résultat de l'étape 1."""
+    """Résultat de l'étape 1 : plan détaillé + en-tête signalétique."""
 
-    def __init__(self, plan_md: str, nom_cours: str, item: str) -> None:
+    def __init__(self, plan_md: str, nom_cours: str, item: str,
+                 en_tete: FicheEnTete) -> None:
         self.plan_md = plan_md
         self.nom_cours = nom_cours
         self.item = item
+        self.en_tete = en_tete
 
 
 class AIProcessor:
@@ -81,19 +100,23 @@ class AIProcessor:
 
     # ── Étapes ────────────────────────────────────────────────────────────────
     async def generate_plan(self) -> PlanResult:
-        """Étape 1 — génère le plan détaillé et déduit le nom du cours."""
+        """Étape 1 — génère le plan détaillé et l'en-tête signalétique."""
         raw = await self._exchange(STEP1_PLAN, "étape 1 (plan)", _MAX_TOKENS_PLAN)
 
-        nom_match = _NOM_COURS_RE.search(raw)
-        item_match = _ITEM_RE.search(raw)
-        nom_cours = (nom_match.group(1).strip() if nom_match else "").strip()
-        item = (item_match.group(1).strip() if item_match else "").strip()
+        nom_cours = _extract_tag(raw, "nom_cours")
+        item = _extract_tag(raw, "item")
+        en_tete = FicheEnTete(
+            objectifs=_extract_list(raw, "objectifs"),
+            prerequis=_extract_list(raw, "prerequis"),
+            mots_cles=_extract_list(raw, "mots_cles"),
+            items_lies=_extract_list(raw, "items_lies"),
+            vignette=_extract_tag(raw, "vignette"),
+        )
 
-        plan_md = _NOM_COURS_RE.sub("", raw)
-        plan_md = _ITEM_RE.sub("", plan_md).strip()
+        plan_md = _TAG_BLOCK_RE.sub("", raw).strip()
         if not plan_md:
             raise AIProcessingError("Plan vide renvoyé par l'IA.")
-        return PlanResult(plan_md=plan_md, nom_cours=nom_cours, item=item)
+        return PlanResult(plan_md=plan_md, nom_cours=nom_cours, item=item, en_tete=en_tete)
 
     async def write_section(self, plan_md: str, numero: str) -> str:
         """Étape 2 — rédige le Markdown (tableaux) d'une grande partie."""
@@ -103,9 +126,15 @@ class AIProcessor:
         )
 
     async def generate_synthesis(self) -> str:
-        """Étape 3 — génère les tableaux de synthèse et les points à retenir."""
+        """Étape 3 — tableaux de synthèse, chiffres-clés et points à retenir."""
         return await self._exchange(
             STEP3_SYNTHESIS, "étape 3 (synthèse)", _MAX_TOKENS_SYNTHESIS
+        )
+
+    async def generate_extras(self) -> str:
+        """Étape 4 — algorithmes décisionnels et fiche éclair."""
+        return await self._exchange(
+            STEP4_EXTRAS, "étape 4 (algorithmes & fiche éclair)", _MAX_TOKENS_EXTRAS
         )
 
     # ── Appel API bas niveau ──────────────────────────────────────────────────
