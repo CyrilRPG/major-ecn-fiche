@@ -2,7 +2,7 @@
 """Génère une fiche d'exemple à partir de données fictives (sans appel API).
 
 Permet de valider le rendu visuel (PDF + DOCX) de la charte « luxe médical »,
-de l'organisation en tableaux et des enrichissements pédagogiques.
+de l'organisation en tableaux, des lignes-réflexe et de l'insertion d'images.
 Sortie : dossier `examples/`.
 """
 
@@ -19,8 +19,9 @@ from major_ecn.content_builder import output_basename  # noqa: E402
 from major_ecn.docx_generator import render_docx  # noqa: E402
 from major_ecn.models import (  # noqa: E402
     Algorithme,
+    AnalyzedImage,
+    ExtractedImage,
     FicheData,
-    FicheEnTete,
     FicheRow,
     Partie,
     PlanPartie,
@@ -30,40 +31,97 @@ from major_ecn.models import (  # noqa: E402
 )
 from major_ecn.pdf_generator import render_pdf  # noqa: E402
 
+FIGURES_DIR = PROJECT_ROOT / "examples" / "sample_figures"
+
 
 def _row(concept: str, detail: str) -> FicheRow:
     return FicheRow(concept=concept, detail_md=detail)
 
 
+# ── Génération d'images-schémas de démonstration ──────────────────────────────
+def _font(size: int):
+    """Charge une police pour le rendu des schémas, avec repli."""
+    from PIL import ImageFont
+
+    for candidate in (
+        "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf",
+        "/Library/Fonts/Arial.ttf",
+        "/System/Library/Fonts/Supplemental/Georgia.ttf",
+    ):
+        if Path(candidate).exists():
+            try:
+                return ImageFont.truetype(candidate, size)
+            except OSError:
+                continue
+    try:
+        return ImageFont.load_default(size=size)
+    except TypeError:  # Pillow < 10.1
+        return ImageFont.load_default()
+
+
+def _make_schema(path: Path, title: str, nodes: list[str]) -> None:
+    """Dessine un schéma de démonstration (suite de nœuds reliés par des flèches)."""
+    from PIL import Image, ImageDraw
+
+    width, height = 960, 430
+    red, gold, anthracite, cream = (
+        (225, 29, 72), (201, 169, 97), (31, 41, 55), (250, 247, 242),
+    )
+    image = Image.new("RGB", (width, height), (255, 255, 251))
+    draw = ImageDraw.Draw(image)
+
+    draw.text((width / 2, 48), title, fill=anthracite, font=_font(32), anchor="mm")
+    draw.line([(width / 2 - 170, 84), (width / 2 + 170, 84)], fill=gold, width=3)
+
+    count = len(nodes)
+    box_w, box_h, margin = 232, 118, 44
+    gap = (width - 2 * margin - count * box_w) / max(1, count - 1) if count > 1 else 0
+    top = 210
+    edges: list[tuple[float, float]] = []
+    for index, label in enumerate(nodes):
+        left = margin + index * (box_w + gap)
+        draw.rounded_rectangle(
+            [left, top, left + box_w, top + box_h],
+            radius=16, fill=cream, outline=red, width=3,
+        )
+        draw.multiline_text(
+            (left + box_w / 2, top + box_h / 2), label, fill=anthracite,
+            font=_font(21), anchor="mm", align="center", spacing=6,
+        )
+        edges.append((left, left + box_w))
+        if index > 0:
+            mid_y = top + box_h / 2
+            start_x, end_x = edges[index - 1][1] + 6, left - 14
+            draw.line([(start_x, mid_y), (end_x, mid_y)], fill=red, width=4)
+            draw.polygon(
+                [(end_x, mid_y - 9), (end_x, mid_y + 9), (end_x + 14, mid_y)],
+                fill=red,
+            )
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    image.save(path, "PNG")
+
+
+def _figure(path: Path, description: str, concept: str, number: int) -> AnalyzedImage:
+    """Construit un `AnalyzedImage` prêt à être inséré dans une sous-partie."""
+    source = ExtractedImage(data=b"", ext="png", page=1, index=number,
+                            width=960, height=430, sha=f"demo-{number}")
+    return AnalyzedImage(
+        source=source, description=description, concept_lie=concept,
+        pertinence=9, type="schema", section_suggeree=concept,
+        saved_path=path, figure_number=number,
+    )
+
+
 def _mock_fiche() -> FicheData:
     """Construit une `FicheData` fictive et complète (HTA)."""
-    en_tete = FicheEnTete(
-        objectifs=[
-            "Définir l'HTA et connaître ses seuils diagnostiques",
-            "Conduire le bilan initial et rechercher le retentissement",
-            "Hiérarchiser la prise en charge thérapeutique",
-        ],
-        prerequis=[
-            "Régulation de la pression artérielle",
-            "Système rénine-angiotensine-aldostérone",
-        ],
-        mots_cles=[
-            "HTA", "PAS / PAD", "MAPA", "Automesure", "Organes cibles",
-            "IEC", "ARA II", "Bithérapie", "HTA secondaire",
-        ],
-        items_lies=[
-            "Item 222 — Facteurs de risque cardiovasculaire",
-            "Item 232 — Insuffisance cardiaque",
-            "Item 264 — Néphropathie vasculaire",
-        ],
-        vignette=(
-            "Un homme de 58 ans, sans antécédent, consulte pour un bilan "
-            "systématique. La pression artérielle mesurée est de 158/96 mmHg, "
-            "confirmée à deux reprises. Il est asymptomatique. Comment confirmer "
-            "le diagnostic, évaluer le retentissement et instaurer la prise en "
-            "charge ?"
-        ),
-    )
+    fig1 = FIGURES_DIR / "figure_01.png"
+    fig2 = FIGURES_DIR / "figure_02.png"
+    _make_schema(fig1, "Démarche diagnostique de l'HTA",
+                 ["PA élevée\nau cabinet", "Confirmation\npar MAPA",
+                  "Bilan +\ntraitement"])
+    _make_schema(fig2, "Retentissement sur les organes cibles",
+                 ["Cœur\n(HVG)", "Rein\n(↓ DFG)", "Œil\n(rétinopathie)"])
 
     plan = [
         PlanPartie("I", "Définition et épidémiologie",
@@ -81,7 +139,7 @@ def _mock_fiche() -> FicheData:
     ]
 
     partie_1 = Partie("I", "Définition et épidémiologie", [
-        SousPartie("A", "Définitions et seuils", "generalites", [
+        SousPartie("A", "Définitions et seuils", [
             _row("★ Définition de l'HTA",
                  "- **HTA** : **PAS** ≥ **140 mmHg** et/ou **PAD** ≥ **90 mmHg** "
                  "au cabinet\n"
@@ -97,8 +155,9 @@ def _mock_fiche() -> FicheData:
                 "Ne pas confondre l'**HTA blouse blanche** (PA élevée au cabinet "
                 "uniquement) et l'**HTA masquée** (PA normale au cabinet, élevée "
                 "en ambulatoire) : le pronostic diffère.")),
-        ]),
-        SousPartie("B", "Épidémiologie", "generalites", [
+        ], images=[_figure(fig1, "Étapes de la démarche diagnostique devant une "
+                           "pression artérielle élevée.", "démarche diagnostique", 1)]),
+        SousPartie("B", "Épidémiologie", [
             _row("Prévalence",
                  "- environ **30 %** de la population adulte\n"
                  "- augmente avec l'**âge**\n"
@@ -113,7 +172,7 @@ def _mock_fiche() -> FicheData:
     ])
 
     partie_2 = Partie("II", "Diagnostic et bilan initial", [
-        SousPartie("A", "Mesure de la pression artérielle", "paraclinique", [
+        SousPartie("A", "Mesure de la pression artérielle", [
             _row("Conditions de mesure",
                  "- patient au **repos** depuis 5 minutes, assis\n"
                  "- brassard adapté à la circonférence du bras\n"
@@ -126,7 +185,7 @@ def _mock_fiche() -> FicheData:
                 "Automesure — **règle des 3** : 3 mesures matin et soir, "
                 "3 jours de suite.")),
         ]),
-        SousPartie("B", "Bilan de retentissement", "clinique", [
+        SousPartie("B", "Bilan de retentissement", [
             _row("◆ Organes cibles",
                  "- **Cœur** : ECG, hypertrophie ventriculaire gauche\n"
                  "- **Rein** : créatininémie, **DFG**, protéinurie\n"
@@ -136,18 +195,19 @@ def _mock_fiche() -> FicheData:
             FicheRow(concept="", kind="piege", detail_md=(
                 "⚠ Rechercher une **HTA secondaire** si HTA résistante, sujet "
                 "jeune ou signes d'orientation.")),
-        ]),
+        ], images=[_figure(fig2, "Principaux organes cibles atteints par "
+                           "l'hypertension artérielle.", "organes cibles", 2)]),
     ])
 
     partie_3 = Partie("III", "Prise en charge thérapeutique", [
-        SousPartie("A", "Mesures non médicamenteuses", "traitement", [
+        SousPartie("A", "Mesures non médicamenteuses", [
             _row("Règles hygiéno-diététiques",
                  "- réduction des apports en **sel** (< 6 g/j)\n"
                  "- **perte de poids** en cas de surpoids\n"
                  "- **activité physique** régulière (30 min/j)\n"
                  "- limitation de l'**alcool**, arrêt du **tabac**"),
         ]),
-        SousPartie("B", "Traitement médicamenteux", "traitement", [
+        SousPartie("B", "Traitement médicamenteux", [
             _row("★ Classes de 1re intention",
                  "| Classe | Exemple | Indication |\n"
                  "|--------|---------|-----------|\n"
@@ -236,7 +296,6 @@ def _mock_fiche() -> FicheData:
         nom_cours="Hypertension Artérielle",
         annee="2025-2026",
         item="Item 224",
-        en_tete=en_tete,
         plan=plan,
         parties=[partie_1, partie_2, partie_3],
         algorithmes=algorithmes,
@@ -252,7 +311,6 @@ def _mock_fiche() -> FicheData:
 def main() -> None:
     """Génère la fiche d'exemple en PDF et DOCX."""
     fiche = _mock_fiche()
-    fiche.en_tete.duree_lecture = 12
     output_dir = PROJECT_ROOT / "examples"
     output_dir.mkdir(exist_ok=True)
     basename = output_basename(fiche.matiere, fiche.nom_cours, fiche.annee)

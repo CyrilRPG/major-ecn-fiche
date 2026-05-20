@@ -121,15 +121,14 @@ def test_parse_extras() -> None:
     assert "MAPA" in fiche_eclair
 
 
-def test_parse_section_categories_and_reflexe() -> None:
+def test_parse_section_reflexe_rows() -> None:
     section = (
-        "I. **Partie**\n\nA. **Diagnostic** @paraclinique\n"
+        "I. **Partie**\n\nA. **Diagnostic**\n"
         "[LIGNE] Examen clé\n- détail\n"
         "[PIEGE] Erreur fréquente à éviter\n"
     )
     partie = parse_section(section, "I", "Repli")
     sous = partie.sous_parties[0]
-    assert sous.categorie == "paraclinique"
     kinds = [row.kind for row in sous.rows]
     assert "normal" in kinds and "piege" in kinds
 

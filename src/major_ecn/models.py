@@ -99,7 +99,6 @@ class SousPartie:
 
     lettre: str
     titre: str
-    categorie: str = "generalites"
     rows: list[FicheRow] = field(default_factory=list)
     images: list[AnalyzedImage] = field(default_factory=list)
 
@@ -130,18 +129,6 @@ class Algorithme:
 
 
 @dataclass
-class FicheEnTete:
-    """En-tête signalétique de la fiche (objectifs, prérequis, vignette…)."""
-
-    objectifs: list[str] = field(default_factory=list)
-    prerequis: list[str] = field(default_factory=list)
-    mots_cles: list[str] = field(default_factory=list)
-    items_lies: list[str] = field(default_factory=list)
-    vignette: str = ""
-    duree_lecture: int = 0
-
-
-@dataclass
 class UsageStats:
     """Comptage de tokens et coût estimé d'un ou plusieurs appels API."""
 
@@ -168,7 +155,6 @@ class FicheData:
     nom_cours: str
     annee: str
     item: str = ""
-    en_tete: FicheEnTete = field(default_factory=FicheEnTete)
     plan: list[PlanPartie] = field(default_factory=list)
     parties: list[Partie] = field(default_factory=list)
     algorithmes: list[Algorithme] = field(default_factory=list)

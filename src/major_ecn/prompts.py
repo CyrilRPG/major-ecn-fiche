@@ -24,11 +24,14 @@ COURSE_CONTEXT = (
     "<cours>\n{course_text}\n</cours>"
 )
 
-# ── ÉTAPE 1 — Plan détaillé + en-tête signalétique ────────────────────────────
+# ── ÉTAPE 1 — Plan détaillé ───────────────────────────────────────────────────
 STEP1_PLAN = """\
-MISSION : à partir du cours ci-dessus, prépare la STRUCTURE et l'EN-TÊTE de la fiche.
+MISSION : à partir du cours ci-dessus, génère un sommaire chronologique détaillé.
+Regroupe le contenu en 4 à 7 grandes parties maximum.
 
-1) SOMMAIRE détaillé. Regroupe le contenu en 4 à 7 grandes parties maximum.
+Pour chaque grande partie ou sous-partie, indique le titre et une phrase
+résumant l'idée principale.
+
 FORMAT OBLIGATOIRE (chiffres romains pour les grandes parties, lettres pour
 les sous-parties, titres en gras) :
 
@@ -39,29 +42,9 @@ I. **[TITRE DE LA GRANDE PARTIE]**
 II. **[TITRE DE LA GRANDE PARTIE]**
    ...
 
-2) EN-TÊTE — renvoie CHAQUE élément entre ses balises :
+Déduis également, entre balises :
 <nom_cours>Titre court du cours (ex : « Hypertension Artérielle »)</nom_cours>
 <item>Item / n° ECN si identifiable, sinon laisse vide</item>
-<objectifs>
-- objectif pédagogique 1
-(3 à 6 objectifs d'apprentissage, formulés avec un verbe d'action)
-</objectifs>
-<prerequis>
-- notion prérequise 1
-(2 à 4 prérequis utiles ; laisse vide si aucun)
-</prerequis>
-<mots_cles>
-- mot-clé 1
-(6 à 12 mots-clés essentiels du cours)
-</mots_cles>
-<items_lies>
-- item ou thème ECN connexe 1
-(2 à 5 renvois transversaux ; laisse vide si aucun)
-</items_lies>
-<vignette>
-Courte vignette clinique d'accroche (3 à 5 phrases) illustrant l'intérêt
-pratique du cours et le contexte typique de rencontre.
-</vignette>
 """
 
 # ── ÉTAPE 2 — Rédaction exhaustive d'une grande partie (format tableaux) ───────
@@ -79,7 +62,7 @@ Chaque sous-partie devient un tableau de lignes « concept | détail ».
 FORMAT EXACT À RESPECTER :
 {numero}. **[TITRE DE LA GRANDE PARTIE]**
 
-A. **[TITRE DE LA SOUS-PARTIE]** @categorie
+A. **[TITRE DE LA SOUS-PARTIE]**
 [LIGNE] [Concept / mot-clé de la colonne gauche]
 - **Mot-clé** : développement détaillé et exhaustif
   - sous-détail
@@ -90,13 +73,10 @@ A. **[TITRE DE LA SOUS-PARTIE]** @categorie
 [PIEGE] Erreur ou confusion classique à éviter
 [MNEMO] Moyen mnémotechnique
 
-B. **[TITRE DE LA SOUS-PARTIE]** @categorie
+B. **[TITRE DE LA SOUS-PARTIE]**
 [LIGNE] ...
 
 RÈGLES STRICTES :
-- Après le titre de CHAQUE sous-partie, indique @categorie en choisissant UNE
-  valeur parmi : generalites, physiopathologie, clinique, paraclinique,
-  traitement, suivi.
 - Une balise [LIGNE] ouvre chaque ligne du tableau ; le concept suit
   IMMÉDIATEMENT sur la même ligne.
 - La colonne droite : bullet points « - », imbriqués avec 2 espaces par niveau.

@@ -13,7 +13,6 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from markupsafe import Markup
 
 from major_ecn.config import (
-    CATEGORIES,
     FICHE_LEGEND,
     LOGO_PATH,
     PALETTE,
@@ -93,6 +92,5 @@ def render_fiche_html(fiche: FicheData) -> str:
         palette=PALETTE,
         logo_uri=_file_uri(LOGO_PATH),
         legend=FICHE_LEGEND,
-        categories=CATEGORIES,
         reflexe_labels={key: label for key, (label, _) in REFLEXE_TYPES.items()},
     )

@@ -21,6 +21,7 @@ logs/
 # Sorties générées
 Fiches_Major_ECN/
 **/Fiches_Major_ECN/
+examples/sample_figures/
 
 # Caches outils
 .pytest_cache/

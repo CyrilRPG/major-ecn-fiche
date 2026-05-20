@@ -29,7 +29,7 @@ from major_ecn.models import (
     SousPartie,
     TableauSynthese,
 )
-from major_ecn.config import CATEGORIES, DEFAULT_CATEGORY, READING_SPEED_WPM, Settings
+from major_ecn.config import Settings
 from major_ecn.pdf_extractor import normalize_image_to_png
 from major_ecn.utils.logger import get_logger
 from major_ecn.utils.slugify import slugify, strip_accents, titlecase_fr
@@ -167,17 +167,11 @@ def parse_section(section_md: str, numero: str, fallback_title: str) -> Partie:
             title_found = True
             continue
 
-        # Entête de sous-partie (A., B., …) + catégorie sémantique.
+        # Entête de sous-partie (A., B., …).
         if letter and not is_bullet and not ligne and not reflexe:
             _flush_row()
-            body = letter.group(2)
-            cat_match = re.search(r"@([a-zA-Zé]+)", body)
-            categorie = (cat_match.group(1).lower() if cat_match else DEFAULT_CATEGORY)
-            if categorie not in CATEGORIES:
-                categorie = DEFAULT_CATEGORY
-            title, _ = _split_title_resume(re.sub(r"@[a-zA-Zé]+", "", body).strip())
-            current_sp = SousPartie(lettre=letter.group(1), titre=title,
-                                    categorie=categorie)
+            title, _ = _split_title_resume(letter.group(2))
+            current_sp = SousPartie(lettre=letter.group(1), titre=title)
             sous_parties.append(current_sp)
             continue
 
@@ -407,15 +401,11 @@ async def build_fiche(
     usage = processor.usage
     usage.add(analyzer.usage)
 
-    en_tete = plan_result.en_tete
-    en_tete.duree_lecture = _estimate_reading_time(parties, tableaux, fiche_eclair_md)
-
     fiche = FicheData(
         matiere=titlecase_fr(matiere),
         nom_cours=nom_cours,
         annee=settings.year,
         item=plan_result.item,
-        en_tete=en_tete,
         plan=plan_parties,
         parties=parties,
         algorithmes=algorithmes,
@@ -428,21 +418,6 @@ async def build_fiche(
         usage=usage,
     )
     return fiche
-
-
-def _estimate_reading_time(
-    parties: list[Partie], tableaux: list[TableauSynthese], fiche_eclair: str
-) -> int:
-    """Estime la durée de lecture de la fiche en minutes."""
-    words = len(fiche_eclair.split())
-    for tableau in tableaux:
-        words += len(tableau.markdown.split())
-    for partie in parties:
-        words += len(partie.titre.split())
-        for sous in partie.sous_parties:
-            for row in sous.rows:
-                words += len(row.concept.split()) + len(row.detail_md.split())
-    return max(1, round(words / READING_SPEED_WPM))
 
 
 def _fiche_numero(item: str) -> str:

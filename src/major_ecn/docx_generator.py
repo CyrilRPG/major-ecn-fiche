@@ -17,7 +17,7 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Mm, Pt, RGBColor
 
-from major_ecn.config import CATEGORIES, FICHE_LEGEND, REFLEXE_TYPES
+from major_ecn.config import FICHE_LEGEND, REFLEXE_TYPES
 from major_ecn.models import AnalyzedImage, FicheData
 
 # ── Couleurs de la charte (hex sans « # » pour le XML, RGBColor pour les runs) ─
@@ -28,7 +28,6 @@ PEARL = "9CA3AF"
 ROW_ALT = "FCFBF7"
 ROSE_PALE = "FCE7EC"
 ROSE_DARK = RGBColor(0x9F, 0x12, 0x39)
-GOLD_DARK = RGBColor(0x9A, 0x7B, 0x33)
 
 RGB_RED = RGBColor(0xE1, 0x1D, 0x48)
 RGB_GOLD = RGBColor(0xC9, 0xA9, 0x61)
@@ -289,7 +288,6 @@ class DocxFicheWriter:
         """Construit et renvoie le document Word complet."""
         self._configure_header_footer(fiche)
         self._build_cover(fiche, logo_path)
-        self._build_entete(fiche)
         self._build_plan(fiche)
         for partie in fiche.parties:
             self._build_partie(partie)
@@ -457,89 +455,6 @@ class DocxFicheWriter:
         run.font.color.rgb = RGB_RED
         _set_paragraph_borders(paragraph, bottom={"sz": 4, "color": GOLD, "space": 4})
 
-    # -- 1 bis. Fiche signalétique ---------------------------------------------
-    def _build_entete(self, fiche: FicheData) -> None:
-        self._section_title("Fiche signalétique")
-        en = fiche.en_tete
-
-        meta = [
-            ("Item ECN", fiche.item or "—"),
-            ("Matière", fiche.matiere),
-            ("Lecture estimée", f"≈ {en.duree_lecture} min"),
-            ("Année", fiche.annee),
-        ]
-        table = self.doc.add_table(rows=2, cols=4)
-        table.alignment = WD_TABLE_ALIGNMENT.CENTER
-        _set_table_borders(table, PEARL, sz=4)
-        for col, (key, value) in enumerate(meta):
-            key_cell, val_cell = table.rows[0].cells[col], table.rows[1].cells[col]
-            _shade_cell(key_cell, CREAM)
-            _shade_cell(val_cell, CREAM)
-            key_par = key_cell.paragraphs[0]
-            key_par.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            key_run = key_par.add_run(key.upper())
-            key_run.font.name = FONT_BODY
-            key_run.bold = True
-            key_run.font.size = Pt(7.5)
-            key_run.font.color.rgb = RGB_PEARL
-            val_par = val_cell.paragraphs[0]
-            val_par.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            val_run = val_par.add_run(value)
-            val_run.font.name = FONT_SOFT
-            val_run.bold = True
-            val_run.font.size = Pt(12)
-            val_run.font.color.rgb = RGB_RED
-
-        if en.vignette:
-            box = self.doc.add_table(rows=1, cols=1)
-            box.alignment = WD_TABLE_ALIGNMENT.CENTER
-            box.autofit = False
-            cell = box.rows[0].cells[0]
-            cell.width = Mm(CONTENT_WIDTH_MM)
-            _shade_cell(cell, "FFFBF4")
-            _set_cell_borders(cell, GOLD, sz=4, left_accent=22)
-            tag_par = cell.paragraphs[0]
-            tag_par.paragraph_format.space_before = Pt(4)
-            tag_run = tag_par.add_run("VIGNETTE CLINIQUE")
-            tag_run.font.name = FONT_BODY
-            tag_run.bold = True
-            tag_run.font.size = Pt(8)
-            tag_run.font.color.rgb = GOLD_DARK
-            _set_char_spacing(tag_run, 28)
-            body_par = cell.add_paragraph()
-            body_par.paragraph_format.space_after = Pt(4)
-            body_run = body_par.add_run(en.vignette)
-            body_run.font.name = FONT_SOFT
-            body_run.italic = True
-            body_run.font.size = Pt(11.5)
-            body_run.font.color.rgb = RGB_ANTHRACITE
-
-        if en.objectifs:
-            self._info_title("Objectifs d'apprentissage")
-            for objectif in en.objectifs:
-                par = self.doc.add_paragraph(style="List Bullet")
-                par.paragraph_format.space_after = Pt(2)
-                _add_inline_runs(par, objectif, size=10.5)
-
-        for label, items in (("Prérequis", en.prerequis),
-                             ("Items & cours liés", en.items_lies)):
-            if items:
-                self._info_title(label)
-                for entry in items:
-                    par = self.doc.add_paragraph(style="List Bullet")
-                    par.paragraph_format.space_after = Pt(2)
-                    _add_inline_runs(par, entry, size=10.5)
-
-        if en.mots_cles:
-            self._info_title("Mots-clés")
-            par = self.doc.add_paragraph()
-            kw_run = par.add_run("   ·   ".join(en.mots_cles))
-            kw_run.font.name = FONT_BODY
-            kw_run.font.size = Pt(10)
-            kw_run.font.color.rgb = RGB_ANTHRACITE
-
-        self.doc.add_page_break()
-
     # -- 2. Plan ---------------------------------------------------------------
     def _build_plan(self, fiche: FicheData) -> None:
         self._section_title("Plan du cours")
@@ -625,9 +540,8 @@ class DocxFicheWriter:
         concept_width = Mm(CONTENT_WIDTH_MM * 0.27)
         detail_width = Mm(CONTENT_WIDTH_MM * 0.73)
         full_width = Mm(CONTENT_WIDTH_MM)
-        category = CATEGORIES.get(sous.categorie)
 
-        # En-tête : étiquette de partie + titre de sous-partie + catégorie.
+        # En-tête : étiquette de partie + titre de sous-partie.
         tag_cell, title_cell = table.rows[0].cells
         _shade_cell(tag_cell, RED)
         _shade_cell(title_cell, ROSE_PALE)
@@ -653,15 +567,6 @@ class DocxFicheWriter:
         title_run.bold = True
         title_run.font.size = Pt(13)
         title_run.font.color.rgb = ROSE_DARK
-        if category:
-            cat_par = title_cell.add_paragraph()
-            cat_par.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            cat_run = cat_par.add_run(category.label.upper())
-            cat_run.font.name = FONT_BODY
-            cat_run.bold = True
-            cat_run.font.size = Pt(7.4)
-            cat_run.font.color.rgb = RGBColor.from_string(category.color.lstrip("#"))
-            _set_char_spacing(cat_run, 18)
 
         # Lignes : standard (concept | détail) ou réflexe (pleine largeur).
         for index, row in enumerate(sous.rows, start=1):

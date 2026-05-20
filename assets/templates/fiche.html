@@ -14,67 +14,7 @@
   {# ── 1. PAGE DE GARDE ── #}
   {% include 'cover.html' %}
 
-  {# ── 2. FICHE SIGNALÉTIQUE ── #}
-  <section class="page entete-page">
-    <h2 class="page-title">Fiche signalétique</h2>
-
-    <div class="meta-grid">
-      {% if fiche.item %}<div class="meta-cell"><span class="meta-k">Item ECN</span>
-        <span class="meta-v">{{ fiche.item }}</span></div>{% endif %}
-      <div class="meta-cell"><span class="meta-k">Matière</span>
-        <span class="meta-v">{{ fiche.matiere }}</span></div>
-      <div class="meta-cell"><span class="meta-k">Lecture estimée</span>
-        <span class="meta-v">≈ {{ fiche.en_tete.duree_lecture }} min</span></div>
-      <div class="meta-cell"><span class="meta-k">Année</span>
-        <span class="meta-v">{{ fiche.annee }}</span></div>
-    </div>
-
-    {% if fiche.en_tete.vignette %}
-    <div class="vignette">
-      <div class="vignette-tag">Vignette clinique</div>
-      <p>{{ fiche.en_tete.vignette }}</p>
-    </div>
-    {% endif %}
-
-    {% if fiche.en_tete.objectifs %}
-    <div class="info-block">
-      <h3 class="info-title">Objectifs d'apprentissage</h3>
-      <ul class="info-list info-list--objectifs">
-        {% for o in fiche.en_tete.objectifs %}<li>{{ o | md_inline }}</li>{% endfor %}
-      </ul>
-    </div>
-    {% endif %}
-
-    <div class="info-columns">
-      {% if fiche.en_tete.prerequis %}
-      <div class="info-block">
-        <h3 class="info-title">Prérequis</h3>
-        <ul class="info-list">
-          {% for p in fiche.en_tete.prerequis %}<li>{{ p | md_inline }}</li>{% endfor %}
-        </ul>
-      </div>
-      {% endif %}
-      {% if fiche.en_tete.items_lies %}
-      <div class="info-block">
-        <h3 class="info-title">Items & cours liés</h3>
-        <ul class="info-list">
-          {% for i in fiche.en_tete.items_lies %}<li>{{ i | md_inline }}</li>{% endfor %}
-        </ul>
-      </div>
-      {% endif %}
-    </div>
-
-    {% if fiche.en_tete.mots_cles %}
-    <div class="info-block">
-      <h3 class="info-title">Mots-clés</h3>
-      <div class="keyword-cloud">
-        {% for k in fiche.en_tete.mots_cles %}<span class="keyword">{{ k }}</span>{% endfor %}
-      </div>
-    </div>
-    {% endif %}
-  </section>
-
-  {# ── 3. PLAN DU COURS ── #}
+  {# ── 2. PLAN DU COURS ── #}
   <section class="page plan-page">
     <h2 class="page-title">Plan du cours</h2>
     <p class="plan-subtitle">{{ fiche.matiere }}&nbsp;&middot;&nbsp;{{ fiche.nom_cours }}</p>
@@ -115,8 +55,7 @@
     </div>
 
     {% for sp in partie.sous_parties %}
-    {% set cat = categories.get(sp.categorie) %}
-    <table class="fiche-table cat-{{ sp.categorie }}">
+    <table class="fiche-table">
       <colgroup>
         <col class="ft-col-concept" />
         <col class="ft-col-detail" />
@@ -126,7 +65,6 @@
           <th class="ft-tag">{{ partie.numero }}</th>
           <th class="ft-subtitle">
             <span class="ft-subtitle-text">{{ sp.lettre }}.&nbsp;&nbsp;{{ sp.titre }}</span>
-            {% if cat %}<span class="ft-cat-chip">{{ cat.label }}</span>{% endif %}
           </th>
         </tr>
       </thead>
