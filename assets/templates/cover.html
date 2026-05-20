@@ -43,4 +43,15 @@
     <span class="cover-cartouche-line"></span>
   </div>
 
+  {# Légende des marqueurs (en bas à gauche) #}
+  <div class="cover-legend">
+    <div class="cover-legend-title">Légende</div>
+    {% for entry in legend %}
+    <div class="cover-legend-row">
+      <span class="cover-legend-sym cover-legend-sym--{{ loop.index }}">{{ entry.symbol }}</span>
+      <span class="cover-legend-text">{{ entry.label }}</span>
+    </div>
+    {% endfor %}
+  </div>
+
 </section>

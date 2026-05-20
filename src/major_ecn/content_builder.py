@@ -21,6 +21,7 @@ from major_ecn.models import (
     AnalyzedImage,
     ExtractedDocument,
     FicheData,
+    FicheRow,
     Partie,
     PlanPartie,
     PlanSousPartie,
@@ -38,6 +39,7 @@ _ROMAN_RE = re.compile(r"^\s{0,3}([IVXLCDM]{1,6})[.)]\s+(.+)$")
 _LETTER_RE = re.compile(r"^\s{0,6}([A-Z])[.)]\s+(.+)$")
 _TITLE_RE = re.compile(r"^\*\*(.+?)\*\*\s*[:：–-]?\s*(.*)$", re.DOTALL)
 _HEADING_RE = re.compile(r"^\s*#{1,6}\s+(.*)$")
+_LIGNE_RE = re.compile(r"^\s*\[(?:LIGNE|ROW|LINE)\]\s*(.*)$", re.IGNORECASE)
 
 
 # ── Helpers de parsing ────────────────────────────────────────────────────────
@@ -115,56 +117,91 @@ def parse_plan(plan_md: str) -> list[PlanPartie]:
 
 
 def parse_section(section_md: str, numero: str, fallback_title: str) -> Partie:
-    """Transforme le Markdown d'une partie (étape 2) en `Partie` structurée."""
+    """Transforme le Markdown d'une partie (étape 2) en `Partie` (tableaux).
+
+    Chaque sous-partie (A., B., …) devient un tableau ; chaque balise `[LIGNE]`
+    ouvre une ligne « concept | détail ».
+    """
     lines = section_md.splitlines()
     partie = Partie(numero=numero, titre=fallback_title)
-
-    intro_lines: list[str] = []
     sous_parties: list[SousPartie] = []
     current_sp: SousPartie | None = None
-    current_body: list[str] = []
+    current_row: FicheRow | None = None
+    detail_lines: list[str] = []
     title_found = False
 
-    def _flush() -> None:
-        if current_sp is not None:
-            current_sp.corps_md = _normalize_indentation("\n".join(current_body))
+    def _flush_row() -> None:
+        nonlocal current_row
+        if current_row is not None:
+            current_row.detail_md = _normalize_indentation("\n".join(detail_lines))
+        detail_lines.clear()
+        current_row = None
+
+    def _ensure_sp() -> SousPartie:
+        nonlocal current_sp
+        if current_sp is None:
+            current_sp = SousPartie(lettre="A", titre=partie.titre)
+            sous_parties.append(current_sp)
+        return current_sp
 
     for raw_line in lines:
         line = raw_line.rstrip()
         stripped = line.strip()
+        if not stripped and current_row is None:
+            continue
+
         roman = _ROMAN_RE.match(line)
         letter = _LETTER_RE.match(line)
-        is_bullet = bool(re.match(r"[-*+]\s+", stripped))
+        ligne = _LIGNE_RE.match(line)
+        is_bullet = bool(re.match(r"[-*+]\s", stripped))
 
-        if not title_found and roman and not is_bullet:
+        # Titre de la grande partie (première occurrence).
+        if not title_found and roman and not is_bullet and not ligne:
             title, _ = _split_title_resume(roman.group(2))
             partie.titre = title or fallback_title
             title_found = True
             continue
 
-        if letter and not is_bullet:
-            _flush()
+        # Entête de sous-partie (A., B., …).
+        if letter and not is_bullet and not ligne:
+            _flush_row()
             title, _ = _split_title_resume(letter.group(2))
             current_sp = SousPartie(lettre=letter.group(1), titre=title)
             sous_parties.append(current_sp)
-            current_body = []
             continue
 
-        if current_sp is None:
-            if stripped:
-                intro_lines.append(line)
-        else:
-            current_body.append(line)
+        # Nouvelle ligne de tableau.
+        if ligne:
+            _flush_row()
+            concept = ligne.group(1).strip().strip("*").strip()
+            current_row = FicheRow(concept=concept)
+            _ensure_sp().rows.append(current_row)
+            continue
 
-    _flush()
-    partie.intro_md = _normalize_indentation("\n".join(intro_lines))
-    partie.sous_parties = sous_parties
+        # Ligne de contenu (détail de la colonne droite).
+        if current_row is not None:
+            detail_lines.append(line)
+        elif stripped:
+            current_row = FicheRow(concept="Généralités")
+            _ensure_sp().rows.append(current_row)
+            detail_lines.append(line)
 
-    # Repli : aucune sous-partie détectée → tout le corps dans une sous-partie unique.
+    _flush_row()
+
+    for sous in sous_parties:
+        sous.rows = [r for r in sous.rows if r.detail_md.strip() or r.concept.strip()]
+    partie.sous_parties = [sous for sous in sous_parties if sous.rows]
+
+    # Repli : aucun contenu structuré exploitable.
     if not partie.sous_parties:
-        body = _normalize_indentation("\n".join(intro_lines))
-        partie.intro_md = ""
-        partie.sous_parties = [SousPartie(lettre="A", titre=partie.titre, corps_md=body)]
+        body = _normalize_indentation(section_md)
+        partie.sous_parties = [
+            SousPartie(
+                lettre="A",
+                titre=partie.titre,
+                rows=[FicheRow(concept="Points clés", detail_md=body)],
+            )
+        ]
     return partie
 
 
@@ -298,10 +335,8 @@ async def build_fiche(
     parties: list[Partie] = []
     for index, plan_partie in enumerate(plan_parties, start=1):
         _progress(f"rédaction {index}/{len(plan_parties)}")
-        section = await processor.write_section(plan_result.plan_md, plan_partie.numero)
-        partie = parse_section(section.content_md, plan_partie.numero, plan_partie.titre)
-        partie.encadres = section.encadres
-        parties.append(partie)
+        section_md = await processor.write_section(plan_result.plan_md, plan_partie.numero)
+        parties.append(parse_section(section_md, plan_partie.numero, plan_partie.titre))
 
     # Étape 3 — tableaux de synthèse + points à retenir.
     _progress("synthèse")

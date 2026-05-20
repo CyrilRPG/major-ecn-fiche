@@ -12,11 +12,14 @@ import markdown as md_lib
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from markupsafe import Markup
 
-from major_ecn.config import LOGO_PATH, PALETTE, TEMPLATES_DIR
-from major_ecn.models import ENCADRE_ICONS, ENCADRE_LABELS, FicheData
+from major_ecn.config import FICHE_LEGEND, LOGO_PATH, PALETTE, TEMPLATES_DIR
+from major_ecn.models import FicheData
 
 # Extensions Markdown : tableaux + listes imbriquées fiables.
 _MD_EXTENSIONS = ["tables", "sane_lists"]
+
+# Marqueurs de légende → classe CSS pour la coloration.
+_MARKER_CLASSES = {"★": "m-ecn", "◆": "m-yield", "⚠": "m-trap"}
 
 
 def _markdown_converter() -> md_lib.Markdown:
@@ -24,12 +27,21 @@ def _markdown_converter() -> md_lib.Markdown:
     return md_lib.Markdown(extensions=_MD_EXTENSIONS, output_format="html")
 
 
+def _highlight_markers(html: str) -> str:
+    """Enveloppe les marqueurs de légende (★ ◆ ⚠) dans des spans stylables."""
+    for symbol, css_class in _MARKER_CLASSES.items():
+        html = html.replace(
+            symbol, f'<span class="fmark {css_class}">{symbol}</span>'
+        )
+    return html
+
+
 def render_markdown(text: str) -> Markup:
     """Convertit du Markdown en HTML sûr (bloc complet)."""
     if not text or not text.strip():
         return Markup("")
     converter = _markdown_converter()
-    return Markup(converter.convert(text))
+    return Markup(_highlight_markers(converter.convert(text)))
 
 
 def render_markdown_inline(text: str) -> Markup:
@@ -73,6 +85,5 @@ def render_fiche_html(fiche: FicheData) -> str:
         css=css_content,
         palette=PALETTE,
         logo_uri=_file_uri(LOGO_PATH),
-        encadre_labels=ENCADRE_LABELS,
-        encadre_icons=ENCADRE_ICONS,
+        legend=FICHE_LEGEND,
     )

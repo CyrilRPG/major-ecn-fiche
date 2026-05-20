@@ -69,6 +69,27 @@ DEFAULT_PRICING = {"input": 5.0, "output": 25.0}
 CACHE_WRITE_MULTIPLIER = 1.25  # Écriture de cache : 1.25× le tarif input
 CACHE_READ_MULTIPLIER = 0.1    # Lecture de cache : 0.1× le tarif input
 
+# ── Légende des marqueurs de fiche ────────────────────────────────────────────
+@dataclass(frozen=True)
+class LegendEntry:
+    """Entrée de légende : un marqueur inséré dans le contenu + sa signification."""
+
+    symbol: str
+    label: str
+    description: str
+
+
+# Marqueurs insérés par l'IA dans le contenu et expliqués sur la page de garde.
+# ★ est imposé (notion déjà tombée) ; ◆ et ⚠ sont deux propositions à évaluer.
+FICHE_LEGEND: tuple[LegendEntry, ...] = (
+    LegendEntry("★", "Déjà tombé aux ECN",
+                "Notion déjà posée lors d'une épreuve classante nationale."),
+    LegendEntry("◆", "Notion à haut rendement",
+                "Point à fort enjeu, statistiquement très rentable — à maîtriser en priorité."),
+    LegendEntry("⚠", "Piège classique",
+                "Erreur fréquemment commise ou confusion à éviter — vigilance requise."),
+)
+
 # ── Paramètres métier ─────────────────────────────────────────────────────────
 DEFAULT_YEAR = "2025-2026"
 IMAGE_RELEVANCE_THRESHOLD = 6  # Note minimale de pertinence pédagogique (0-10)

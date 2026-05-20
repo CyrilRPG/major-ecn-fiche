@@ -45,7 +45,7 @@
     </ol>
   </section>
 
-  {# ── 3. CORPS DE LA FICHE ── #}
+  {# ── 3. CORPS DE LA FICHE (tableaux structurés) ── #}
   {% for partie in fiche.parties %}
   <section class="page partie-page">
 
@@ -54,37 +54,37 @@
       <span class="partie-banner-title">{{ partie.titre }}</span>
     </div>
 
-    {% if partie.intro_md %}
-    <div class="content">{{ partie.intro_md | md }}</div>
-    {% endif %}
-
     {% for sp in partie.sous_parties %}
-    <div class="souspartie">
-      <h3 class="souspartie-title">
-        <span class="souspartie-letter">{{ sp.lettre }}</span>{{ sp.titre }}
-      </h3>
-      <div class="content">{{ sp.corps_md | md }}</div>
+    <table class="fiche-table">
+      <colgroup>
+        <col class="ft-col-concept" />
+        <col class="ft-col-detail" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="ft-tag">{{ partie.numero }}</th>
+          <th class="ft-subtitle">{{ sp.lettre }}.&nbsp;&nbsp;{{ sp.titre }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in sp.rows %}
+        <tr>
+          <td class="ft-concept">{{ row.concept | md_inline }}</td>
+          <td class="ft-detail content">{{ row.detail_md | md }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
 
-      {% for img in sp.images %}
-      {% set uri = img.saved_path | file_uri %}
-      {% if uri %}
-      <figure class="figure">
-        <img src="{{ uri }}" alt="{{ img.description }}" />
-        <figcaption>Figure&nbsp;{{ img.figure_number }} — {{ img.description }}</figcaption>
-      </figure>
-      {% endif %}
-      {% endfor %}
-    </div>
+    {% for img in sp.images %}
+    {% set uri = img.saved_path | file_uri %}
+    {% if uri %}
+    <figure class="figure">
+      <img src="{{ uri }}" alt="{{ img.description }}" />
+      <figcaption>Figure&nbsp;{{ img.figure_number }} — {{ img.description }}</figcaption>
+    </figure>
+    {% endif %}
     {% endfor %}
-
-    {% for enc in partie.encadres %}
-    <div class="encadre encadre--{{ enc.type }}">
-      <div class="encadre-title">
-        <span class="encadre-icon">{{ encadre_icons.get(enc.type, '') }}</span>
-        <span>{{ enc.titre or encadre_labels.get(enc.type, 'Encadré') }}</span>
-      </div>
-      <div class="encadre-body content">{{ enc.contenu | md }}</div>
-    </div>
     {% endfor %}
 
   </section>

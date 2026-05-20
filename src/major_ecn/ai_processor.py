@@ -9,7 +9,6 @@ chaque étape s'ajoute à la même conversation pour partager le contexte :
 
 from __future__ import annotations
 
-import json
 import re
 
 from anthropic import AsyncAnthropic
@@ -20,8 +19,7 @@ from major_ecn.config import (
     Settings,
     model_pricing,
 )
-from major_ecn.models import Encadre, UsageStats
-from major_ecn.models import ENCADRE_TYPES
+from major_ecn.models import UsageStats
 from major_ecn.prompts import (
     COURSE_CONTEXT,
     STEP1_PLAN,
@@ -29,7 +27,6 @@ from major_ecn.prompts import (
     STEP3_SYNTHESIS,
     SYSTEM_WRITER,
 )
-from major_ecn.utils.logger import get_logger
 from major_ecn.utils.retry import retry_async
 
 # Plafonds de tokens en sortie par étape.
@@ -39,7 +36,6 @@ _MAX_TOKENS_SYNTHESIS = 8_000
 
 _NOM_COURS_RE = re.compile(r"<nom_cours>\s*(.*?)\s*</nom_cours>", re.IGNORECASE | re.DOTALL)
 _ITEM_RE = re.compile(r"<item>\s*(.*?)\s*</item>", re.IGNORECASE | re.DOTALL)
-_ENCADRES_RE = re.compile(r"<encadres>\s*(.*?)\s*</encadres>", re.IGNORECASE | re.DOTALL)
 
 
 class AIProcessingError(RuntimeError):
@@ -53,14 +49,6 @@ class PlanResult:
         self.plan_md = plan_md
         self.nom_cours = nom_cours
         self.item = item
-
-
-class SectionResult:
-    """Résultat de l'étape 2 pour une grande partie."""
-
-    def __init__(self, content_md: str, encadres: list[Encadre]) -> None:
-        self.content_md = content_md
-        self.encadres = encadres
 
 
 class AIProcessor:
@@ -107,14 +95,12 @@ class AIProcessor:
             raise AIProcessingError("Plan vide renvoyé par l'IA.")
         return PlanResult(plan_md=plan_md, nom_cours=nom_cours, item=item)
 
-    async def write_section(self, plan_md: str, numero: str) -> SectionResult:
-        """Étape 2 — rédige une grande partie et ses encadrés."""
+    async def write_section(self, plan_md: str, numero: str) -> str:
+        """Étape 2 — rédige le Markdown (tableaux) d'une grande partie."""
         instruction = STEP2_SECTION.format(plan=plan_md, numero=numero)
-        raw = await self._exchange(instruction, f"étape 2 (partie {numero})", _MAX_TOKENS_SECTION)
-
-        encadres = self._parse_encadres(raw)
-        content_md = _ENCADRES_RE.sub("", raw).strip()
-        return SectionResult(content_md=content_md, encadres=encadres)
+        return await self._exchange(
+            instruction, f"étape 2 (partie {numero})", _MAX_TOKENS_SECTION
+        )
 
     async def generate_synthesis(self) -> str:
         """Étape 3 — génère les tableaux de synthèse et les points à retenir."""
@@ -194,28 +180,3 @@ class AIProcessor:
                 cost_usd=cost,
             )
         )
-
-    @staticmethod
-    def _parse_encadres(raw: str) -> list[Encadre]:
-        """Extrait et valide le JSON des encadrés spéciaux d'une section."""
-        match = _ENCADRES_RE.search(raw)
-        if not match:
-            return []
-        try:
-            payload = json.loads(match.group(1))
-        except json.JSONDecodeError:
-            get_logger().debug("Encadrés JSON invalides — ignorés.")
-            return []
-        if not isinstance(payload, list):
-            return []
-
-        encadres: list[Encadre] = []
-        for item in payload:
-            if not isinstance(item, dict):
-                continue
-            etype = str(item.get("type", "")).strip().lower()
-            titre = str(item.get("titre", "")).strip()
-            contenu = str(item.get("contenu", "")).strip()
-            if etype in ENCADRE_TYPES and contenu:
-                encadres.append(Encadre(type=etype, titre=titre, contenu=contenu))
-        return encadres

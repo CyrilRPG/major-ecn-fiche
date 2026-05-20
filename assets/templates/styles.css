@@ -73,7 +73,6 @@
   --anthracite: #1F2937;
   --pearl: #9CA3AF;
   --offwhite: #FFFEFB;
-  --red-pale: #FEE2E2;
   --serif: "Playfair Display", "Times New Roman", serif;
   --serif-soft: "Cormorant Garamond", "Times New Roman", serif;
   --sans: "Inter", "Helvetica", "Arial", sans-serif;
@@ -270,6 +269,41 @@ html, body {
   color: var(--red);
 }
 
+/* Légende des marqueurs (bas-gauche de la page de garde). */
+.cover-legend {
+  position: absolute;
+  left: 40mm;
+  bottom: 26mm;
+  width: 58mm;
+}
+.cover-legend-title {
+  font-family: var(--sans);
+  font-size: 9pt;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  padding-bottom: 1.6mm;
+  margin-bottom: 2.4mm;
+  border-bottom: 0.7pt solid var(--gold);
+}
+.cover-legend-row { margin: 2mm 0; }
+.cover-legend-sym {
+  display: inline-block;
+  width: 7mm;
+  font-size: 11pt;
+  font-weight: 700;
+  text-align: center;
+}
+.cover-legend-sym--1 { color: var(--gold); }
+.cover-legend-sym--2 { color: var(--red); }
+.cover-legend-sym--3 { color: #B91C1C; }
+.cover-legend-text {
+  font-family: var(--sans);
+  font-size: 9.3pt;
+  color: var(--anthracite);
+}
+
 /* ════════════════════════════════════════════════════════════════════════════
    2. PLAN DU COURS
    ════════════════════════════════════════════════════════════════════════════ */
@@ -371,22 +405,75 @@ html, body {
 }
 .partie-banner--synthese .partie-banner-title { padding-left: 1mm; }
 
-.souspartie { margin: 6mm 0; }
-.souspartie-title {
-  background: var(--cream);
-  border-left: 1.4mm solid var(--gold);
-  padding: 2.6mm 4mm;
+/* ── Tableaux de fiche : concept (gauche) + détail exhaustif (droite) ─────── */
+.fiche-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  margin: 5mm 0;
+  font-size: 9.7pt;
+}
+.ft-col-concept { width: 27%; }
+.ft-col-detail { width: 73%; }
+
+/* En-tête : étiquette de partie + titre de sous-partie (répété si coupure). */
+.fiche-table thead { display: table-header-group; }
+.fiche-table th { break-inside: avoid; }
+
+.ft-tag {
+  background: var(--red);
+  color: #fff;
   font-family: var(--serif-soft);
-  font-weight: 600;
-  font-size: 14pt;
-  color: var(--anthracite);
-  break-after: avoid;
-}
-.souspartie-letter {
-  color: var(--red);
+  font-style: italic;
   font-weight: 700;
-  margin-right: 2.4mm;
+  font-size: 12pt;
+  text-align: center;
+  vertical-align: middle;
+  padding: 2.6mm 2mm;
+  border: 0.5pt solid var(--red);
 }
+.ft-subtitle {
+  background: #FCE7EC;
+  color: #9F1239;
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 12.5pt;
+  text-align: center;
+  vertical-align: middle;
+  padding: 2.8mm 4mm;
+  border: 0.5pt solid var(--gold);
+}
+
+/* Corps : colonne concept (gauche) + colonne détail (droite). */
+.ft-concept {
+  background: var(--cream);
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 10pt;
+  color: var(--anthracite);
+  text-align: center;
+  vertical-align: middle;
+  padding: 2.8mm 3mm;
+  border: 0.5pt solid var(--pearl);
+}
+.ft-detail {
+  background: #fff;
+  vertical-align: top;
+  padding: 2.4mm 4mm;
+  border: 0.5pt solid var(--pearl);
+}
+.ft-detail.content { margin: 0; }
+.ft-detail > :first-child { margin-top: 0; }
+.ft-detail > :last-child { margin-bottom: 0; }
+.ft-detail ul, .ft-detail ol { margin: 1mm 0 1mm 2mm; padding-left: 3mm; }
+.ft-detail li { margin: 0.8mm 0; }
+.ft-detail table { margin: 2.4mm 0; font-size: 9pt; }
+
+/* Marqueurs de légende insérés dans le contenu. */
+.fmark { font-weight: 700; }
+.fmark.m-ecn { color: var(--gold); }
+.fmark.m-yield { color: var(--red); }
+.fmark.m-trap { color: #B91C1C; }
 
 /* ── Typographie du contenu ──────────────────────────────────────────────── */
 .content { margin: 3mm 0; }
@@ -444,51 +531,7 @@ td:first-child strong { color: var(--red); }
 thead { display: table-header-group; }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   4. ENCADRÉS SPÉCIAUX
-   ════════════════════════════════════════════════════════════════════════════ */
-.encadre {
-  break-inside: avoid;
-  margin: 5mm 0;
-  padding: 3.4mm 5mm;
-  border-radius: 1.4mm;
-}
-.encadre-title {
-  font-family: var(--sans);
-  font-weight: 700;
-  font-size: 10.6pt;
-  margin-bottom: 1.4mm;
-}
-.encadre-icon { margin-right: 1.6mm; }
-.encadre-body { margin: 0; }
-.encadre-body p:first-child { margin-top: 0; }
-.encadre-body p:last-child { margin-bottom: 0; }
-
-.encadre--a_retenir {
-  background: var(--cream);
-  border-left: 2.6mm solid var(--red);
-}
-.encadre--a_retenir .encadre-title { color: var(--red); }
-
-.encadre--piege_ecn {
-  background: var(--red-pale);
-  border-left: 2.6mm solid var(--red);
-}
-.encadre--piege_ecn .encadre-title { color: #B91C1C; }
-
-.encadre--mots_cles_tombes {
-  background: #F3F4F6;
-  border-left: 2.6mm solid var(--pearl);
-}
-.encadre--mots_cles_tombes .encadre-title { color: #4B5563; }
-
-.encadre--mnemo {
-  background: #FBF6E8;
-  border-left: 2.6mm solid var(--gold);
-}
-.encadre--mnemo .encadre-title { color: #9A7B33; }
-
-/* ════════════════════════════════════════════════════════════════════════════
-   5. FIGURES & IMAGES
+   4. FIGURES & IMAGES
    ════════════════════════════════════════════════════════════════════════════ */
 .figure {
   break-inside: avoid;
@@ -511,7 +554,7 @@ thead { display: table-header-group; }
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   6. TABLEAUX DE SYNTHÈSE
+   5. TABLEAUX DE SYNTHÈSE
    ════════════════════════════════════════════════════════════════════════════ */
 .synthese-bloc {
   margin: 6mm 0;
@@ -533,7 +576,7 @@ thead { display: table-header-group; }
 .table-synthese tbody tr:nth-child(even) { background: var(--cream); }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   7. À RETENIR ABSOLUMENT
+   6. À RETENIR ABSOLUMENT
    ════════════════════════════════════════════════════════════════════════════ */
 .retenir-card {
   border: 0.9pt solid var(--gold);

@@ -21,12 +21,17 @@ II. **Diagnostic** : Démarche diagnostique.
 
 SECTION_MD = """\
 I. **Définition et épidémiologie**
-   A. **Définitions**
-      - **HTA** : pression artérielle élevée
-        - seuil de 140/90 mmHg
-      - **Confirmation** : mesures répétées
-   B. **Épidémiologie**
-      - **Prévalence** : environ 30 %
+
+A. **Définitions**
+[LIGNE] ★ Définition de l'HTA
+- **HTA** : pression artérielle élevée
+  - seuil de 140/90 mmHg
+[LIGNE] Confirmation
+- mesures répétées sur deux consultations
+
+B. **Épidémiologie**
+[LIGNE] Prévalence
+- environ 30 % de la population adulte
 """
 
 SYNTHESIS_MD = """\
@@ -58,16 +63,26 @@ def test_parse_section_structure() -> None:
     partie = parse_section(SECTION_MD, "I", "Repli")
     assert partie.titre == "Définition et épidémiologie"
     assert len(partie.sous_parties) == 2
-    assert partie.sous_parties[0].lettre == "A"
-    assert partie.sous_parties[0].titre == "Définitions"
-    assert "HTA" in partie.sous_parties[0].corps_md
+
+    sp_a = partie.sous_parties[0]
+    assert sp_a.lettre == "A"
+    assert sp_a.titre == "Définitions"
+    assert len(sp_a.rows) == 2
+    assert "Définition" in sp_a.rows[0].concept
+    assert "★" in sp_a.rows[0].concept
+    assert "HTA" in sp_a.rows[0].detail_md
+    assert sp_a.rows[1].concept == "Confirmation"
+
     assert partie.sous_parties[1].titre == "Épidémiologie"
+    assert partie.sous_parties[1].rows[0].concept == "Prévalence"
 
 
-def test_parse_section_fallback_without_subparts() -> None:
-    partie = parse_section("- contenu brut sans sous-partie", "III", "Titre de repli")
+def test_parse_section_fallback_without_rows() -> None:
+    partie = parse_section("- contenu brut sans structure", "III", "Titre de repli")
     assert partie.titre == "Titre de repli"
     assert len(partie.sous_parties) == 1
+    assert len(partie.sous_parties[0].rows) == 1
+    assert "contenu brut" in partie.sous_parties[0].rows[0].detail_md
 
 
 def test_parse_synthesis() -> None:

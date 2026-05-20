@@ -9,23 +9,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
-# Types d'encadrés spéciaux reconnus (voir prompt étape 2).
-ENCADRE_TYPES = {"a_retenir", "piege_ecn", "mots_cles_tombes", "mnemo"}
-
-ENCADRE_LABELS: dict[str, str] = {
-    "a_retenir": "À retenir",
-    "piege_ecn": "Piège ECN",
-    "mots_cles_tombes": "Mots-clés tombés",
-    "mnemo": "Astuce mnémotechnique",
-}
-
-ENCADRE_ICONS: dict[str, str] = {
-    "a_retenir": "🎯",
-    "piege_ecn": "⚠️",
-    "mots_cles_tombes": "🔑",
-    "mnemo": "💡",
-}
-
 
 @dataclass
 class ExtractedImage:
@@ -79,15 +62,6 @@ class AnalyzedImage:
 
 
 @dataclass
-class Encadre:
-    """Encadré spécial inséré dans une section."""
-
-    type: str
-    titre: str
-    contenu: str
-
-
-@dataclass
 class PlanSousPartie:
     """Sous-partie du plan (page sommaire)."""
 
@@ -107,12 +81,20 @@ class PlanPartie:
 
 
 @dataclass
+class FicheRow:
+    """Ligne de tableau de fiche : concept (colonne gauche) + détail exhaustif."""
+
+    concept: str
+    detail_md: str = ""
+
+
+@dataclass
 class SousPartie:
-    """Sous-partie rédigée du corps de la fiche."""
+    """Sous-partie du corps, rendue sous forme de tableau structuré."""
 
     lettre: str
     titre: str
-    corps_md: str = ""
+    rows: list[FicheRow] = field(default_factory=list)
     images: list[AnalyzedImage] = field(default_factory=list)
 
 
@@ -122,9 +104,7 @@ class Partie:
 
     numero: str
     titre: str
-    intro_md: str = ""
     sous_parties: list[SousPartie] = field(default_factory=list)
-    encadres: list[Encadre] = field(default_factory=list)
 
 
 @dataclass

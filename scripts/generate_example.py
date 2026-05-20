@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Génère une fiche d'exemple à partir de données fictives (sans appel API).
 
-Permet de valider le rendu visuel (PDF + DOCX) de la charte « luxe médical ».
-Sortie : dossier `examples/`.
+Permet de valider le rendu visuel (PDF + DOCX) de la charte « luxe médical »
+et de l'organisation en tableaux. Sortie : dossier `examples/`.
 """
 
 from __future__ import annotations
@@ -17,8 +17,8 @@ from major_ecn.config import LOGO_PATH  # noqa: E402
 from major_ecn.content_builder import output_basename  # noqa: E402
 from major_ecn.docx_generator import render_docx  # noqa: E402
 from major_ecn.models import (  # noqa: E402
-    Encadre,
     FicheData,
+    FicheRow,
     Partie,
     PlanPartie,
     PlanSousPartie,
@@ -29,7 +29,7 @@ from major_ecn.pdf_generator import render_pdf  # noqa: E402
 
 
 def _mock_fiche() -> FicheData:
-    """Construit une `FicheData` fictive et complète (HTA)."""
+    """Construit une `FicheData` fictive et complète (HTA), en tableaux."""
     plan = [
         PlanPartie(
             numero="I",
@@ -73,49 +73,60 @@ def _mock_fiche() -> FicheData:
             SousPartie(
                 lettre="A",
                 titre="Définitions et seuils",
-                corps_md=(
-                    "- **Hypertension artérielle (HTA)** : pression artérielle "
-                    "systolique (**PAS**) ≥ **140 mmHg** et/ou pression artérielle "
-                    "diastolique (**PAD**) ≥ **90 mmHg** au cabinet.\n"
-                    "    - Mesure confirmée à **deux consultations** distinctes.\n"
-                    "    - Seuils abaissés en automesure : **≥ 135/85 mmHg**.\n"
-                    "- **Grades de sévérité** :\n"
-                    "    - **Grade 1** : 140-159 / 90-99 mmHg.\n"
-                    "    - **Grade 2** : 160-179 / 100-109 mmHg.\n"
-                    "    - **Grade 3** : ≥ 180 / 110 mmHg.\n"
-                    "- **HTA blouse blanche** : élévation tensionnelle limitée au "
-                    "cabinet médical, à confirmer par **MAPA** ou **automesure**."
-                ),
+                rows=[
+                    FicheRow(
+                        concept="★ Définition de l'HTA",
+                        detail_md=(
+                            "- **Hypertension artérielle (HTA)** : pression "
+                            "artérielle systolique (**PAS**) ≥ **140 mmHg** "
+                            "et/ou diastolique (**PAD**) ≥ **90 mmHg** au cabinet\n"
+                            "  - diagnostic confirmé sur **deux consultations** "
+                            "distinctes\n"
+                            "  - en automesure, seuil abaissé à **≥ 135/85 mmHg**"
+                        ),
+                    ),
+                    FicheRow(
+                        concept="◆ Grades de sévérité",
+                        detail_md=(
+                            "| Grade | PAS (mmHg) | PAD (mmHg) |\n"
+                            "|-------|-----------|-----------|\n"
+                            "| **Grade 1** | 140-159 | 90-99 |\n"
+                            "| **Grade 2** | 160-179 | 100-109 |\n"
+                            "| **Grade 3** | ≥ 180 | ≥ 110 |"
+                        ),
+                    ),
+                    FicheRow(
+                        concept="⚠ HTA blouse blanche",
+                        detail_md=(
+                            "- élévation tensionnelle **au cabinet uniquement**\n"
+                            "- à confirmer par **MAPA** ou **automesure**\n"
+                            "- ⚠ à ne pas confondre avec l'**HTA masquée** "
+                            "(normale au cabinet, élevée en ambulatoire)"
+                        ),
+                    ),
+                ],
             ),
             SousPartie(
                 lettre="B",
                 titre="Épidémiologie",
-                corps_md=(
-                    "- **Prévalence** : environ **30 %** de la population adulte ; "
-                    "augmente avec l'âge.\n"
-                    "- Premier motif de consultation en médecine générale.\n"
-                    "- **Facteurs de risque** :\n"
-                    "    - Non modifiables : **âge**, **sexe masculin**, hérédité.\n"
-                    "    - Modifiables : **surpoids**, **sédentarité**, "
-                    "**consommation de sel**, **alcool**, tabac.\n"
-                    "- L'HTA est un facteur de risque **cardiovasculaire majeur** : "
-                    "AVC, insuffisance cardiaque, coronaropathie, néphropathie."
-                ),
-            ),
-        ],
-        encadres=[
-            Encadre(
-                type="a_retenir",
-                titre="À retenir",
-                contenu="Le diagnostic d'HTA repose sur des mesures **répétées** "
-                "et **standardisées**. Une seule mesure élevée ne suffit jamais.",
-            ),
-            Encadre(
-                type="piege_ecn",
-                titre="Piège ECN",
-                contenu="Ne pas confondre **HTA blouse blanche** (PA élevée au "
-                "cabinet uniquement) et **HTA masquée** (PA normale au cabinet, "
-                "élevée en ambulatoire) — pronostic différent.",
+                rows=[
+                    FicheRow(
+                        concept="Prévalence",
+                        detail_md=(
+                            "- environ **30 %** de la population adulte\n"
+                            "- augmente avec l'**âge**\n"
+                            "- premier motif de consultation en médecine générale"
+                        ),
+                    ),
+                    FicheRow(
+                        concept="◆ Facteurs de risque",
+                        detail_md=(
+                            "- **Non modifiables** : âge, sexe masculin, hérédité\n"
+                            "- **Modifiables** : surpoids, sédentarité, "
+                            "consommation de **sel**, alcool, tabac"
+                        ),
+                    ),
+                ],
             ),
         ],
     )
@@ -127,38 +138,59 @@ def _mock_fiche() -> FicheData:
             SousPartie(
                 lettre="A",
                 titre="Mesure de la pression artérielle",
-                corps_md=(
-                    "- **Conditions de mesure** :\n"
-                    "    - Patient au **repos** depuis 5 minutes, assis.\n"
-                    "    - Brassard adapté à la circonférence du bras.\n"
-                    "    - Mesure aux **deux bras** lors du bilan initial.\n"
-                    "- **MAPA** (mesure ambulatoire sur 24 h) : référence pour "
-                    "confirmer le diagnostic et dépister l'**HTA masquée**.\n"
-                    "- **Automesure** : 3 mesures matin et soir, 3 jours de suite "
-                    "(**règle des 3**)."
-                ),
+                rows=[
+                    FicheRow(
+                        concept="Conditions de mesure",
+                        detail_md=(
+                            "- patient au **repos** depuis 5 minutes, assis\n"
+                            "- brassard adapté à la circonférence du bras\n"
+                            "- mesure aux **deux bras** lors du bilan initial"
+                        ),
+                    ),
+                    FicheRow(
+                        concept="★ MAPA",
+                        detail_md=(
+                            "- mesure **ambulatoire** de la PA sur 24 h\n"
+                            "- examen de **référence** pour confirmer le diagnostic\n"
+                            "- dépiste l'**HTA masquée**"
+                        ),
+                    ),
+                    FicheRow(
+                        concept="Automesure",
+                        detail_md=(
+                            "- **règle des 3** : 3 mesures matin et soir, "
+                            "3 jours de suite"
+                        ),
+                    ),
+                ],
             ),
             SousPartie(
                 lettre="B",
                 titre="Bilan de retentissement",
-                corps_md=(
-                    "- Recherche d'une **atteinte des organes cibles** :\n"
-                    "    - **Cœur** : ECG, hypertrophie ventriculaire gauche.\n"
-                    "    - **Rein** : créatininémie, **DFG**, protéinurie.\n"
-                    "    - **Œil** : rétinopathie hypertensive si HTA sévère.\n"
-                    "- **Bilan biologique minimal** : kaliémie, glycémie à jeun, "
-                    "bilan lipidique, créatininémie.\n"
-                    "- Recherche d'une **HTA secondaire** si HTA résistante, "
-                    "sujet jeune ou signes d'orientation."
-                ),
-            ),
-        ],
-        encadres=[
-            Encadre(
-                type="mots_cles_tombes",
-                titre="Mots-clés tombés",
-                contenu="- MAPA\n- Hypertrophie ventriculaire gauche\n"
-                "- Organes cibles\n- HTA secondaire\n- Protéinurie",
+                rows=[
+                    FicheRow(
+                        concept="◆ Organes cibles",
+                        detail_md=(
+                            "- **Cœur** : ECG, hypertrophie ventriculaire gauche\n"
+                            "- **Rein** : créatininémie, **DFG**, protéinurie\n"
+                            "- **Œil** : rétinopathie hypertensive si HTA sévère"
+                        ),
+                    ),
+                    FicheRow(
+                        concept="Bilan biologique",
+                        detail_md=(
+                            "- kaliémie, glycémie à jeun\n"
+                            "- bilan lipidique, créatininémie"
+                        ),
+                    ),
+                    FicheRow(
+                        concept="⚠ HTA secondaire",
+                        detail_md=(
+                            "- à rechercher si **HTA résistante**, sujet jeune "
+                            "ou signes d'orientation"
+                        ),
+                    ),
+                ],
             ),
         ],
     )
@@ -170,39 +202,43 @@ def _mock_fiche() -> FicheData:
             SousPartie(
                 lettre="A",
                 titre="Mesures non médicamenteuses",
-                corps_md=(
-                    "- **Règles hygiéno-diététiques**, systématiques :\n"
-                    "    - Réduction des apports en **sel** (< 6 g/j).\n"
-                    "    - Perte de poids en cas de surpoids.\n"
-                    "    - **Activité physique** régulière (30 min/j).\n"
-                    "    - Limitation de l'**alcool**, arrêt du **tabac**.\n"
-                    "- Toujours associées au traitement médicamenteux."
-                ),
+                rows=[
+                    FicheRow(
+                        concept="Règles hygiéno-diététiques",
+                        detail_md=(
+                            "- réduction des apports en **sel** (< 6 g/j)\n"
+                            "- **perte de poids** en cas de surpoids\n"
+                            "- **activité physique** régulière (30 min/j)\n"
+                            "- limitation de l'**alcool**, arrêt du **tabac**"
+                        ),
+                    ),
+                ],
             ),
             SousPartie(
                 lettre="B",
                 titre="Traitement médicamenteux",
-                corps_md=(
-                    "- **Cinq classes** de première intention :\n"
-                    "    - **IEC** et **ARA II** : bloqueurs du système "
-                    "rénine-angiotensine.\n"
-                    "    - **Inhibiteurs calciques**.\n"
-                    "    - **Diurétiques thiazidiques**.\n"
-                    "    - **Bêtabloquants** (indications spécifiques).\n"
-                    "- Stratégie : **bithérapie d'emblée** souvent recommandée, "
-                    "en privilégiant les **associations fixes**.\n"
-                    "- Objectif tensionnel : **< 140/90 mmHg**, voire "
-                    "**< 130/80 mmHg** si bien toléré."
-                ),
-            ),
-        ],
-        encadres=[
-            Encadre(
-                type="mnemo",
-                titre="Astuce mnémotechnique",
-                contenu="Les 5 classes — moyen mnémotechnique « **A-B-C-D** » : "
-                "**A**RA II / IEC, **B**êtabloquants, **C**alciques, "
-                "**D**iurétiques.",
+                rows=[
+                    FicheRow(
+                        concept="★ Classes de 1re intention",
+                        detail_md=(
+                            "| Classe | Exemple | Indication préférentielle |\n"
+                            "|--------|---------|---------------------------|\n"
+                            "| **IEC** | Ramipril | Diabète, insuffisance cardiaque |\n"
+                            "| **ARA II** | Losartan | Intolérance aux IEC (toux) |\n"
+                            "| **Inhibiteur calcique** | Amlodipine | Sujet âgé |\n"
+                            "| **Diurétique thiazidique** | HCTZ | Sujet âgé |"
+                        ),
+                    ),
+                    FicheRow(
+                        concept="◆ Stratégie thérapeutique",
+                        detail_md=(
+                            "- **bithérapie d'emblée** souvent recommandée\n"
+                            "  - privilégier les **associations fixes**\n"
+                            "- objectif : **< 140/90 mmHg**, voire "
+                            "**< 130/80 mmHg** si bien toléré"
+                        ),
+                    ),
+                ],
             ),
         ],
     )

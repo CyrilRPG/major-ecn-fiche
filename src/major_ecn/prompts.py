@@ -51,42 +51,52 @@ Déduis également :
 - Le NIVEAU/ITEM ECN si identifiable → renvoie-le entre balises <item></item>
 """
 
-# ── ÉTAPE 2 — Rédaction exhaustive d'une grande partie ────────────────────────
+# ── ÉTAPE 2 — Rédaction exhaustive d'une grande partie (format tableaux) ───────
 STEP2_SECTION = """\
 Rappel du plan défini :
 {plan}
 
-Passons à la rédaction de la partie {numero}. Développe le contenu de CETTE
-partie uniquement, de manière EXTRÊMEMENT EXHAUSTIVE, en gardant le découpage
-et l'ordre du plan.
+Rédige maintenant la partie {numero} UNIQUEMENT, de manière EXTRÊMEMENT
+EXHAUSTIVE et rigoureusement scientifique. NE RÉSUME PAS : développe chaque
+notion du cours.
+
+PRÉSENTATION OBLIGATOIRE — TOUTE la fiche est structurée en TABLEAUX.
+Chaque sous-partie devient un tableau. Chaque ligne de tableau a :
+- une COLONNE GAUCHE : un concept / mot-clé / thème court (1 à 5 mots) ;
+- une COLONNE DROITE : le développement exhaustif en bullet points imbriqués.
+
+FORMAT EXACT À RESPECTER :
+{numero}. **[TITRE DE LA GRANDE PARTIE]**
+
+A. **[TITRE DE LA SOUS-PARTIE]**
+[LIGNE] [Concept de la colonne gauche]
+- **Mot-clé** : développement détaillé et exhaustif
+  - sous-détail
+    - sous-sous-détail si nécessaire
+[LIGNE] [Autre concept]
+- ...
+
+B. **[TITRE DE LA SOUS-PARTIE]**
+[LIGNE] ...
 
 RÈGLES STRICTES :
-- Utilise des bullet points (« - ») pour chaque idée distincte
-- Mets les mots-clés MÉDICAUX en gras (pathologies, médicaments, mécanismes, valeurs)
-- Descends jusqu'aux sous-sous-bullets si nécessaire (indentation de 2 espaces)
-- Aère le texte pour la lisibilité
-- Titres et sous-titres en gras, chiffres romains + lettres
-- Donne un titre à chaque sous-partie
+- Une balise [LIGNE] ouvre chaque ligne du tableau ; le concept de la colonne
+  gauche suit IMMÉDIATEMENT sur la même ligne que [LIGNE].
+- La colonne droite : bullet points « - », imbriqués avec 2 espaces par niveau.
+- Mets en GRAS les mots-clés médicaux/scientifiques (structures, mécanismes,
+  pathologies, valeurs chiffrées, classifications).
+- Pour COMPARER plusieurs éléments, insère un SOUS-TABLEAU Markdown
+  (| col1 | col2 |) directement dans la colonne droite.
+- Reste strictement fidèle au cours source — n'invente aucune donnée.
 
-FORMAT :
-{numero}. **[TITRE DE LA GRANDE PARTIE]**
-   A. **[TITRE DE LA SOUS-PARTIE]**
-      - **Concept clé** : développement
-        - sous-détail
-          - sous-sous-détail si nécessaire
-      - **Autre concept** : ...
-   B. **[TITRE DE LA SOUS-PARTIE]**
-      ...
+MARQUEURS — insère ces symboles JUSTE AVANT le terme concerné :
+- ★ devant une notion déjà tombée aux ECN ;
+- ◆ devant une notion à haut rendement (à maîtriser en priorité) ;
+- ⚠ devant un piège classique ou une erreur fréquente.
+Utilise ces marqueurs avec discernement, uniquement là où c'est justifié.
 
-À LA FIN de cette partie, identifie 0 à 3 ENCADRÉS SPÉCIAUX à insérer, au
-format JSON, entre balises <encadres></encadres> :
-<encadres>
-[
-  {{"type": "a_retenir", "titre": "...", "contenu": "..."}}
-]
-</encadres>
-Les types autorisés sont : "a_retenir", "piege_ecn", "mots_cles_tombes", "mnemo".
-Si aucun encadré n'est pertinent, renvoie une liste vide : <encadres>[]</encadres>.
+Ne produis QUE le contenu de la partie {numero}, au format ci-dessus, sans
+aucun texte d'introduction ni de conclusion.
 """
 
 # ── ÉTAPE 3 — Tableaux de synthèse + points à retenir ─────────────────────────

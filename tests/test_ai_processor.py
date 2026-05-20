@@ -76,30 +76,16 @@ def test_generate_plan_extracts_tags() -> None:
     assert "Définition" in result.plan_md
 
 
-def test_write_section_parses_encadres() -> None:
+def test_write_section_returns_markdown() -> None:
     reply = (
-        "I. **Définition**\n   A. **Seuils**\n      - **HTA** : PA élevée\n"
-        '<encadres>[{"type": "piege_ecn", "titre": "Attention", '
-        '"contenu": "Ne pas confondre."}]</encadres>'
+        "I. **Définition**\n\nA. **Seuils**\n"
+        "[LIGNE] ★ Définition\n- **HTA** : PA élevée"
     )
     processor = _processor([reply])
     result = asyncio.run(processor.write_section("plan factice", "I"))
-    assert len(result.encadres) == 1
-    assert result.encadres[0].type == "piege_ecn"
-    assert "<encadres>" not in result.content_md
-
-
-def test_parse_encadres_rejects_unknown_type() -> None:
-    raw = '<encadres>[{"type": "inconnu", "contenu": "x"}, ' \
-          '{"type": "mnemo", "titre": "M", "contenu": "Astuce"}]</encadres>'
-    encadres = AIProcessor._parse_encadres(raw)
-    assert len(encadres) == 1
-    assert encadres[0].type == "mnemo"
-
-
-def test_parse_encadres_handles_invalid_json() -> None:
-    assert AIProcessor._parse_encadres("<encadres>pas du json</encadres>") == []
-    assert AIProcessor._parse_encadres("aucune balise") == []
+    assert isinstance(result, str)
+    assert "[LIGNE]" in result
+    assert "★" in result
 
 
 def test_usage_tracking_accumulates_cost() -> None:
