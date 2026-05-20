@@ -155,22 +155,34 @@ def _set_char_spacing(run, twips: int) -> None:
     rPr.insert_element_before(spacing, *_RPR_AFTER_SPACING)
 
 
-def _add_page_number(paragraph) -> None:
-    """Insère un champ « numéro de page » dans un paragraphe."""
+def _add_field(paragraph, field_code: str, color: RGBColor) -> None:
+    """Insère un champ Word (PAGE, NUMPAGES…) dans un paragraphe."""
     run = paragraph.add_run()
     begin = OxmlElement("w:fldChar")
     begin.set(qn("w:fldCharType"), "begin")
     instr = OxmlElement("w:instrText")
     instr.set(qn("xml:space"), "preserve")
-    instr.text = "PAGE"
+    instr.text = field_code
     end = OxmlElement("w:fldChar")
     end.set(qn("w:fldCharType"), "end")
     run._r.append(begin)
     run._r.append(instr)
     run._r.append(end)
     run.font.name = FONT_BODY
-    run.font.size = Pt(8)
-    run.font.color.rgb = RGB_PEARL
+    run.font.size = Pt(8.5)
+    run.bold = True
+    run.font.color.rgb = color
+
+
+def _add_page_number(paragraph) -> None:
+    """Insère la pagination « page / total » dans un paragraphe."""
+    _add_field(paragraph, "PAGE", RGB_RED)
+    sep = paragraph.add_run("  /  ")
+    sep.font.name = FONT_BODY
+    sep.font.size = Pt(8.5)
+    sep.bold = True
+    sep.font.color.rgb = RGB_RED
+    _add_field(paragraph, "NUMPAGES", RGB_RED)
 
 
 # ── Parsing Markdown inline ───────────────────────────────────────────────────
@@ -256,32 +268,32 @@ class DocxFicheWriter:
         normal.paragraph_format.space_after = Pt(3)
 
     def _configure_header_footer(self, fiche: FicheData) -> None:
-        """Configure l'en-tête (cours + numéro de page) et le pied de page."""
+        """Configure l'en-tête (cours) et le pied de page (mention + pagination)."""
         section = self.doc.sections[0]
 
         header = section.header
         header_par = header.paragraphs[0]
         header_par.text = ""
-        header_par.paragraph_format.tab_stops.add_tab_stop(
-            Mm(CONTENT_WIDTH_MM), WD_TAB_ALIGNMENT.RIGHT
-        )
-        _add_page_number(header_par)
-        tab_run = header_par.add_run("\t" + fiche.nom_cours)
-        tab_run.font.name = FONT_BODY
-        tab_run.font.size = Pt(8)
-        tab_run.italic = True
-        tab_run.font.color.rgb = RGB_PEARL
+        header_run = header_par.add_run(fiche.nom_cours)
+        header_run.font.name = FONT_BODY
+        header_run.font.size = Pt(8)
+        header_run.italic = True
+        header_run.font.color.rgb = RGB_PEARL
         _set_paragraph_borders(header_par, bottom={"sz": 6, "color": RED, "space": 4})
 
+        # Pied de page : mention à gauche, pagination « n / total » à droite.
         footer = section.footer
         footer_par = footer.paragraphs[0]
         footer_par.text = ""
-        footer_par.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        footer_run = footer_par.add_run(f"MAJOR ECN  ·  {fiche.annee}")
+        footer_par.paragraph_format.tab_stops.add_tab_stop(
+            Mm(CONTENT_WIDTH_MM), WD_TAB_ALIGNMENT.RIGHT
+        )
+        footer_run = footer_par.add_run(f"MAJOR ECN  ·  {fiche.annee}\t")
         footer_run.font.name = FONT_BODY
         footer_run.font.size = Pt(8)
         footer_run.font.color.rgb = RGB_PEARL
         _set_char_spacing(footer_run, 24)
+        _add_page_number(footer_par)
 
     # -- Assemblage ------------------------------------------------------------
     def build(self, fiche: FicheData, logo_path: Path | None) -> Document:
@@ -515,14 +527,13 @@ class DocxFicheWriter:
         self._banner(f"{partie.numero}.  {partie.titre}")
         for sous in partie.sous_parties:
             self._build_souspartie_table(partie.numero, sous)
-            for image in sous.images:
-                self._add_figure(image)
         self.doc.add_page_break()
 
     def _banner(self, text: str) -> None:
         paragraph = self.doc.add_paragraph()
         paragraph.paragraph_format.space_before = Pt(2)
         paragraph.paragraph_format.space_after = Pt(10)
+        paragraph.paragraph_format.keep_with_next = True
         _shade_paragraph(paragraph, RED)
         run = paragraph.add_run(text)
         run.font.name = FONT_TITLE
@@ -531,8 +542,9 @@ class DocxFicheWriter:
         run.font.color.rgb = RGB_WHITE
 
     def _build_souspartie_table(self, numero: str, sous) -> None:
-        """Construit le tableau Word d'une sous-partie (catégorisé + réflexes)."""
-        table = self.doc.add_table(rows=1 + len(sous.rows), cols=2)
+        """Construit le tableau Word d'une sous-partie (lignes, réflexes, figures)."""
+        total_rows = 1 + len(sous.rows) + len(sous.images)
+        table = self.doc.add_table(rows=total_rows, cols=2)
         table.alignment = WD_TABLE_ALIGNMENT.CENTER
         table.autofit = False
         _set_table_borders(table, PEARL, sz=4)
@@ -601,6 +613,13 @@ class DocxFicheWriter:
                 label_run.font.color.rgb = RGBColor.from_string(color.lstrip("#"))
                 _set_char_spacing(label_run, 14)
                 self._fill_detail_cell(merged, row.detail_md)
+
+        # Lignes-figures : schémas intégrés en pleine largeur, dans le tableau.
+        for offset, image in enumerate(sous.images):
+            fig_row = table.rows[1 + len(sous.rows) + offset]
+            merged = fig_row.cells[0].merge(fig_row.cells[1])
+            merged.width = full_width
+            self._fill_figure_cell(merged, image)
 
         spacer = self.doc.add_paragraph()
         spacer.paragraph_format.space_after = Pt(4)
@@ -715,29 +734,31 @@ class DocxFicheWriter:
         ft_run.font.color.rgb = RGB_PEARL
         _set_char_spacing(ft_run, 36)
 
-    # -- Figures ---------------------------------------------------------------
-    def _add_figure(self, image: AnalyzedImage) -> None:
-        if image.saved_path is None or not image.saved_path.exists():
-            return
-        width_mm, _ = _figure_dimensions(image.saved_path)
-
-        picture_par = self.doc.add_paragraph()
+    # -- Figures (intégrées en ligne de tableau) -------------------------------
+    def _fill_figure_cell(self, cell, image: AnalyzedImage) -> None:
+        """Remplit une cellule fusionnée avec un schéma et sa légende."""
+        cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+        picture_par = cell.paragraphs[0]
         picture_par.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        picture_par.paragraph_format.space_before = Pt(8)
-        try:
-            picture_par.add_run().add_picture(str(image.saved_path), width=Mm(width_mm))
-        except Exception:  # noqa: BLE001 — image illisible
-            return
+        picture_par.paragraph_format.space_before = Pt(3)
+        if image.saved_path is not None and image.saved_path.exists():
+            width_mm, _ = _figure_dimensions(image.saved_path)
+            try:
+                picture_par.add_run().add_picture(str(image.saved_path),
+                                                  width=Mm(width_mm))
+            except Exception:  # noqa: BLE001 — image illisible
+                pass
 
-        caption = self.doc.add_paragraph()
+        caption = cell.add_paragraph()
         caption.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        caption.paragraph_format.space_after = Pt(8)
+        caption.paragraph_format.space_before = Pt(1)
+        caption.paragraph_format.space_after = Pt(3)
         caption_run = caption.add_run(
             f"Figure {image.figure_number} — {image.description}"
         )
         caption_run.font.name = FONT_SOFT
         caption_run.italic = True
-        caption_run.font.size = Pt(9.5)
+        caption_run.font.size = Pt(9)
         caption_run.font.color.rgb = RGB_PEARL
 
     # -- Convertisseur Markdown → Word -----------------------------------------
@@ -877,7 +898,7 @@ def _split_table_row(line: str) -> list[str]:
 
 def _figure_dimensions(path: Path) -> tuple[float, float]:
     """Calcule la largeur d'affichage (mm) d'une figure en bornant sa hauteur."""
-    max_width, max_height = 150.0, 165.0
+    max_width, max_height = 132.0, 68.0
     try:
         from PIL import Image  # type: ignore
 
