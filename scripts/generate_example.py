@@ -63,10 +63,10 @@ def _make_schema(path: Path, title: str, nodes: list[str]) -> None:
     from PIL import Image, ImageDraw
 
     width, height = 960, 430
-    red, gold, anthracite, cream = (
-        (225, 29, 72), (201, 169, 97), (31, 41, 55), (250, 247, 242),
+    navy, gold, anthracite, mist = (
+        (15, 30, 51), (201, 169, 97), (27, 36, 51), (238, 241, 245),
     )
-    image = Image.new("RGB", (width, height), (255, 255, 251))
+    image = Image.new("RGB", (width, height), (255, 255, 255))
     draw = ImageDraw.Draw(image)
 
     draw.text((width / 2, 48), title, fill=anthracite, font=_font(32), anchor="mm")
@@ -81,7 +81,7 @@ def _make_schema(path: Path, title: str, nodes: list[str]) -> None:
         left = margin + index * (box_w + gap)
         draw.rounded_rectangle(
             [left, top, left + box_w, top + box_h],
-            radius=16, fill=cream, outline=red, width=3,
+            radius=16, fill=mist, outline=navy, width=3,
         )
         draw.multiline_text(
             (left + box_w / 2, top + box_h / 2), label, fill=anthracite,
@@ -91,10 +91,10 @@ def _make_schema(path: Path, title: str, nodes: list[str]) -> None:
         if index > 0:
             mid_y = top + box_h / 2
             start_x, end_x = edges[index - 1][1] + 6, left - 14
-            draw.line([(start_x, mid_y), (end_x, mid_y)], fill=red, width=4)
+            draw.line([(start_x, mid_y), (end_x, mid_y)], fill=navy, width=4)
             draw.polygon(
                 [(end_x, mid_y - 9), (end_x, mid_y + 9), (end_x + 14, mid_y)],
-                fill=red,
+                fill=navy,
             )
 
     path.parent.mkdir(parents=True, exist_ok=True)

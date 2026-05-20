@@ -21,18 +21,19 @@ from major_ecn.config import FICHE_LEGEND, REFLEXE_TYPES
 from major_ecn.models import AnalyzedImage, FicheData
 
 # ── Couleurs de la charte (hex sans « # » pour le XML, RGBColor pour les runs) ─
+NAVY = "0F1E33"
 RED = "E11D48"
 GOLD = "C9A961"
-CREAM = "FAF7F2"
-PEARL = "9CA3AF"
-ROW_ALT = "FCFBF7"
-ROSE_PALE = "FCE7EC"
-ROSE_DARK = RGBColor(0x9F, 0x12, 0x39)
+MIST = "EEF1F5"
+PEARL = "94A0B0"
+ROW_ALT = "F5F6F9"
+SUBTITLE_BG = "E7ECF3"
 
+RGB_NAVY = RGBColor(0x0F, 0x1E, 0x33)
 RGB_RED = RGBColor(0xE1, 0x1D, 0x48)
 RGB_GOLD = RGBColor(0xC9, 0xA9, 0x61)
-RGB_ANTHRACITE = RGBColor(0x1F, 0x29, 0x37)
-RGB_PEARL = RGBColor(0x9C, 0xA3, 0xAF)
+RGB_ANTHRACITE = RGBColor(0x1B, 0x24, 0x33)
+RGB_PEARL = RGBColor(0x94, 0xA0, 0xB0)
 RGB_KEYWORD = RGBColor(0xBE, 0x12, 0x3C)
 RGB_WHITE = RGBColor(0xFF, 0xFF, 0xFF)
 
@@ -187,13 +188,13 @@ def _add_field(paragraph, field_code: str, color: RGBColor) -> None:
 
 def _add_page_number(paragraph) -> None:
     """Insère la pagination « page / total » dans un paragraphe."""
-    _add_field(paragraph, "PAGE", RGB_RED)
+    _add_field(paragraph, "PAGE", RGB_NAVY)
     sep = paragraph.add_run("  /  ")
     sep.font.name = FONT_BODY
     sep.font.size = Pt(8.5)
     sep.bold = True
-    sep.font.color.rgb = RGB_RED
-    _add_field(paragraph, "NUMPAGES", RGB_RED)
+    sep.font.color.rgb = RGB_NAVY
+    _add_field(paragraph, "NUMPAGES", RGB_NAVY)
 
 
 # ── Parsing Markdown inline ───────────────────────────────────────────────────
@@ -290,7 +291,7 @@ class DocxFicheWriter:
         header_run.font.size = Pt(8)
         header_run.italic = True
         header_run.font.color.rgb = RGB_PEARL
-        _set_paragraph_borders(header_par, bottom={"sz": 6, "color": RED, "space": 4})
+        _set_paragraph_borders(header_par, bottom={"sz": 6, "color": NAVY, "space": 4})
 
         # Pied de page : mention à gauche, pagination « n / total » à droite.
         footer = section.footer
@@ -334,7 +335,7 @@ class DocxFicheWriter:
         band, content = row.cells[0], row.cells[1]
         band.width = Mm(24)
         content.width = Mm(CONTENT_WIDTH_MM - 24)
-        _shade_cell(band, RED)
+        _shade_cell(band, NAVY)
         content.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
 
         # Logo (ou texte de remplacement).
@@ -395,7 +396,7 @@ class DocxFicheWriter:
         cartouche_run.font.name = FONT_SOFT
         cartouche_run.font.size = Pt(12)
         cartouche_run.italic = True
-        cartouche_run.font.color.rgb = RGB_RED
+        cartouche_run.font.color.rgb = RGB_NAVY
 
         self._cover_legend(content)
         self.doc.add_page_break()
@@ -430,7 +431,7 @@ class DocxFicheWriter:
         run.font.name = FONT_TITLE
         run.font.size = Pt(22)
         run.bold = True
-        run.font.color.rgb = RGB_RED
+        run.font.color.rgb = RGB_NAVY
 
     @staticmethod
     def _cover_spacer(cell, count: int = 1) -> None:
@@ -460,8 +461,8 @@ class DocxFicheWriter:
         run.font.color.rgb = RGB_ANTHRACITE
         _set_paragraph_borders(
             title,
-            top={"sz": 12, "color": RED, "space": 6},
-            bottom={"sz": 12, "color": RED, "space": 6},
+            top={"sz": 12, "color": NAVY, "space": 6},
+            bottom={"sz": 12, "color": NAVY, "space": 6},
         )
 
     def _info_title(self, text: str) -> None:
@@ -473,7 +474,7 @@ class DocxFicheWriter:
         run.font.name = FONT_SOFT
         run.bold = True
         run.font.size = Pt(13)
-        run.font.color.rgb = RGB_RED
+        run.font.color.rgb = RGB_NAVY
         _set_paragraph_borders(paragraph, bottom={"sz": 4, "color": GOLD, "space": 4})
 
     # -- 2. Plan ---------------------------------------------------------------
@@ -496,7 +497,7 @@ class DocxFicheWriter:
             num_run.font.name = FONT_TITLE
             num_run.bold = True
             num_run.font.size = Pt(14)
-            num_run.font.color.rgb = RGB_RED
+            num_run.font.color.rgb = RGB_NAVY
             title_run = head.add_run(partie.titre)
             title_run.font.name = FONT_SOFT
             title_run.bold = True
@@ -542,7 +543,7 @@ class DocxFicheWriter:
         paragraph.paragraph_format.space_before = Pt(2)
         paragraph.paragraph_format.space_after = Pt(10)
         paragraph.paragraph_format.keep_with_next = True
-        _shade_paragraph(paragraph, RED)
+        _shade_paragraph(paragraph, NAVY)
         run = paragraph.add_run(text)
         run.font.name = FONT_TITLE
         run.bold = True
@@ -577,8 +578,8 @@ class DocxFicheWriter:
         banner_cell = table.rows[0].cells[0].merge(table.rows[0].cells[1])
         banner_cell.width = full_width
         banner_cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
-        _shade_cell(banner_cell, RED)
-        _set_cell_borders(banner_cell, RED, sz=4)
+        _shade_cell(banner_cell, NAVY)
+        _set_cell_borders(banner_cell, NAVY, sz=4)
         banner_par = banner_cell.paragraphs[0]
         banner_par.paragraph_format.space_before = Pt(3)
         banner_par.paragraph_format.space_after = Pt(3)
@@ -596,8 +597,8 @@ class DocxFicheWriter:
 
         # Ligne 1 : en-tête (étiquette de partie + titre de sous-partie).
         tag_cell, title_cell = table.rows[1].cells
-        _shade_cell(tag_cell, RED)
-        _shade_cell(title_cell, ROSE_PALE)
+        _shade_cell(tag_cell, NAVY)
+        _shade_cell(title_cell, SUBTITLE_BG)
         tag_cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
         title_cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
         tag_cell.width = concept_width
@@ -619,7 +620,7 @@ class DocxFicheWriter:
         title_run.font.name = FONT_TITLE
         title_run.bold = True
         title_run.font.size = Pt(13)
-        title_run.font.color.rgb = ROSE_DARK
+        title_run.font.color.rgb = RGB_NAVY
 
         # Lignes : standard (concept | détail) ou réflexe (pleine largeur).
         for index, row in enumerate(sous.rows, start=2):
@@ -628,7 +629,7 @@ class DocxFicheWriter:
                 concept_cell, detail_cell = table_row.cells
                 concept_cell.width = concept_width
                 detail_cell.width = detail_width
-                _shade_cell(concept_cell, CREAM)
+                _shade_cell(concept_cell, MIST)
                 concept_cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
                 detail_cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
                 concept_par = concept_cell.paragraphs[0]
@@ -641,9 +642,9 @@ class DocxFicheWriter:
                 merged = table_row.cells[0].merge(table_row.cells[1])
                 merged.width = full_width
                 merged.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
-                label, color = REFLEXE_TYPES.get(row.kind, ("Encadré", "#E11D48"))
-                fill = {"a_retenir": CREAM, "piege": "FDEDEC",
-                        "mnemo": "FBF6E8"}.get(row.kind, CREAM)
+                label, color = REFLEXE_TYPES.get(row.kind, ("Encadré", "#0F1E33"))
+                fill = {"a_retenir": MIST, "piege": "FDEDEC",
+                        "mnemo": "FBF6E8"}.get(row.kind, MIST)
                 _shade_cell(merged, fill)
                 _set_cell_borders(merged, color.lstrip("#"), sz=4, left_accent=22)
                 label_par = merged.paragraphs[0]
@@ -694,7 +695,7 @@ class DocxFicheWriter:
         run.font.name = FONT_SOFT
         run.bold = True
         run.font.size = Pt(13)
-        run.font.color.rgb = RGB_RED
+        run.font.color.rgb = RGB_NAVY
         self._render_markdown(markdown, synthese=True)
 
     # -- 5. Fiche éclair -------------------------------------------------------
@@ -723,7 +724,7 @@ class DocxFicheWriter:
         sub_run.font.name = FONT_SOFT
         sub_run.italic = True
         sub_run.font.size = Pt(13)
-        sub_run.font.color.rgb = RGB_RED
+        sub_run.font.color.rgb = RGB_NAVY
 
         if fiche.fiche_eclair_md:
             self._render_markdown(fiche.fiche_eclair_md)
@@ -873,7 +874,7 @@ class DocxFicheWriter:
         header_cells = table.rows[0].cells
         for col in range(columns):
             cell = header_cells[col]
-            _shade_cell(cell, RED if synthese else CREAM)
+            _shade_cell(cell, NAVY if synthese else MIST)
             self._fill_cell(cell, header[col] if col < len(header) else "",
                             bold=True, white=synthese)
 
@@ -881,7 +882,7 @@ class DocxFicheWriter:
             cells = table.add_row().cells
             shade = None
             if row_index % 2 == 1:
-                shade = CREAM if synthese else ROW_ALT
+                shade = MIST if synthese else ROW_ALT
             for col in range(columns):
                 cell = cells[col]
                 if shade:

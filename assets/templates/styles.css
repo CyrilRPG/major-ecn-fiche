@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════════════
-   MAJOR ECN — Charte « luxe médical »
+   MAJOR ECN — Charte « médicale sobre »
    Feuille de style des fiches (WeasyPrint / HTML → PDF, format A4 portrait)
    ════════════════════════════════════════════════════════════════════════════ */
 
@@ -67,12 +67,16 @@
 
 /* ── Variables de charte ──────────────────────────────────────────────────── */
 :root {
-  --red: #E11D48;
-  --gold: #C9A961;
-  --cream: #FAF7F2;
-  --anthracite: #1F2937;
-  --pearl: #9CA3AF;
-  --offwhite: #FFFEFB;
+  --navy: #0F1E33;        /* Bleu nuit — bannières, en-têtes */
+  --navy-deep: #0B1422;   /* Bleu nuit profond — bande de couverture */
+  --red: #E11D48;         /* Rouge — accent ponctuel */
+  --keyword: #BE123C;     /* Rouge profond — mots-clés en gras */
+  --gold: #C9A961;        /* Or — liseré fin, marqueur ★ */
+  --mist: #EEF1F5;        /* Gris clair froid — surfaces */
+  --line: #D3D9E2;        /* Gris très clair — filets discrets */
+  --anthracite: #1B2433;  /* Encre — corps de texte */
+  --pearl: #94A0B0;       /* Gris perle — texte secondaire */
+  --paper: #FFFFFF;       /* Blanc — fond de page */
   --serif: "Playfair Display", "Times New Roman", serif;
   --serif-soft: "Cormorant Garamond", "Times New Roman", serif;
   --sans: "Inter", "Helvetica", "Arial", sans-serif;
@@ -83,8 +87,8 @@
 @page {
   size: A4;
   margin: 24mm 18mm 22mm 18mm;
-  background: var(--offwhite);
-  border-top: 0.7pt solid var(--red);
+  background: var(--paper);
+  border-top: 0.7pt solid var(--navy);
 
   @top-left {
     content: string(course-name);
@@ -99,7 +103,7 @@
     font-family: var(--sans);
     font-size: 8pt;
     font-style: italic;
-    color: var(--red);
+    color: var(--navy);
     vertical-align: bottom;
     padding-bottom: 2.4mm;
   }
@@ -118,7 +122,7 @@
     font-size: 8pt;
     font-weight: 700;
     color: #fff;
-    background: var(--red);
+    background: var(--navy);
     border-radius: 2.4mm;
     height: 7mm;
     width: 16mm;
@@ -189,18 +193,18 @@ tr { break-inside: avoid; }
   position: relative;
   width: 210mm;
   height: 297mm;
-  background: var(--cream);
+  background: var(--paper);
   overflow: hidden;
 }
 
-/* Bande verticale rouge signature (15 % de la largeur). */
+/* Bande verticale bleu nuit signature (15 % de la largeur). */
 .cover-band {
   position: absolute;
   top: 0;
   left: 0;
   width: 31.5mm;
   height: 297mm;
-  background: var(--red);
+  background: var(--navy-deep);
 }
 .cover-cross {
   display: block;
@@ -229,7 +233,7 @@ tr { break-inside: avoid; }
   font-family: var(--serif);
   font-size: 24pt;
   font-weight: 700;
-  color: var(--red);
+  color: var(--navy);
   letter-spacing: 0.08em;
   text-align: right;
   border: 1pt solid var(--gold);
@@ -298,7 +302,7 @@ tr { break-inside: avoid; }
   font-size: 12pt;
   font-style: italic;
   letter-spacing: 0.1em;
-  color: var(--red);
+  color: var(--navy);
 }
 
 /* Légende des marqueurs (bas-gauche de la page de garde). */
@@ -346,8 +350,8 @@ tr { break-inside: avoid; }
   color: var(--anthracite);
   text-align: center;
   padding: 2.8mm 0;
-  border-top: 1.2pt solid var(--red);
-  border-bottom: 1.2pt solid var(--red);
+  border-top: 1.2pt solid var(--navy);
+  border-bottom: 1.2pt solid var(--navy);
 }
 .plan-subtitle {
   text-align: center;
@@ -365,7 +369,7 @@ tr { break-inside: avoid; }
 }
 .plan-partie-head {
   display: block;
-  border-bottom: 0.6pt solid var(--cream);
+  border-bottom: 0.6pt solid var(--line);
   padding-bottom: 1mm;
   text-decoration: none;
   color: inherit;
@@ -374,7 +378,7 @@ tr { break-inside: avoid; }
   font-family: var(--serif);
   font-weight: 700;
   font-size: 12.5pt;
-  color: var(--red);
+  color: var(--navy);
   margin-right: 3mm;
 }
 .plan-partie-title {
@@ -415,7 +419,7 @@ tr { break-inside: avoid; }
    3. CORPS DE LA FICHE
    ════════════════════════════════════════════════════════════════════════════ */
 .partie-banner {
-  background: var(--red);
+  background: var(--navy);
   color: #fff;
   padding: 4.6mm 7mm;
   margin-bottom: 6mm;
@@ -454,15 +458,15 @@ tr { break-inside: avoid; }
 
 /* Bannière de grande partie : 1re ligne du 1er tableau (jamais isolée). */
 .ft-banner-row td {
-  background: var(--red);
+  background: var(--navy);
   color: #fff;
   padding: 4.4mm 6mm;
-  border: 0.5pt solid var(--red);
+  border: 0.5pt solid var(--navy);
 }
 
 /* En-tête : étiquette de partie + titre de sous-partie. */
 .ft-tag {
-  background: var(--red);
+  background: var(--navy);
   color: #fff;
   font-family: var(--serif-soft);
   font-style: italic;
@@ -471,23 +475,23 @@ tr { break-inside: avoid; }
   text-align: center;
   vertical-align: middle;
   padding: 2.6mm 2mm;
-  border: 0.5pt solid var(--red);
+  border: 0.5pt solid var(--navy);
 }
 .ft-subtitle {
-  background: #FCE7EC;
-  color: #9F1239;
+  background: #E7ECF3;
+  color: var(--navy);
   font-family: var(--serif);
   font-weight: 700;
   font-size: 12.5pt;
   text-align: center;
   vertical-align: middle;
   padding: 2.8mm 4mm;
-  border: 0.5pt solid var(--gold);
+  border: 0.5pt solid var(--line);
 }
 
 /* Corps : colonne concept (gauche) + colonne détail (droite). */
 .ft-concept {
-  background: var(--cream);
+  background: var(--mist);
   font-family: var(--sans);
   font-weight: 700;
   font-size: 10pt;
@@ -517,7 +521,7 @@ tr { break-inside: avoid; }
   padding: 2.6mm 4mm;
   vertical-align: top;
 }
-.ft-reflexe--a_retenir td { border-left-color: var(--red); background: var(--cream); }
+.ft-reflexe--a_retenir td { border-left-color: var(--navy); background: var(--mist); }
 .ft-reflexe--piege td { border-left-color: #B91C1C; background: #FDEDEC; }
 .ft-reflexe--mnemo td { border-left-color: var(--gold); background: #FBF6E8; }
 .ft-reflexe-label {
@@ -529,7 +533,7 @@ tr { break-inside: avoid; }
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.ft-reflexe--a_retenir .ft-reflexe-label { color: var(--red); }
+.ft-reflexe--a_retenir .ft-reflexe-label { color: var(--navy); }
 .ft-reflexe--piege .ft-reflexe-label { color: #B91C1C; }
 .ft-reflexe--mnemo .ft-reflexe-label { color: #9A7B33; }
 .ft-reflexe-body { display: block; }
@@ -546,7 +550,7 @@ tr { break-inside: avoid; }
 /* ── Typographie du contenu ──────────────────────────────────────────────── */
 .content { margin: 3mm 0; }
 .content p { margin: 2mm 0; }
-.content strong { color: #BE123C; font-weight: 700; }
+.content strong { color: var(--keyword); font-weight: 700; }
 .content em { color: var(--anthracite); }
 .content h1, .content h2, .content h3, .content h4 {
   font-family: var(--serif-soft);
@@ -561,15 +565,15 @@ tr { break-inside: avoid; }
   padding-left: 3mm;
 }
 .content li { margin: 1.3mm 0; }
-.content li::marker { color: var(--red); }
+.content li::marker { color: var(--navy); }
 .content ul ul li::marker { color: var(--gold); }
 .content ul ul ul li::marker { color: var(--pearl); }
 
-.content a { color: var(--red); text-decoration: none; }
+.content a { color: var(--navy); text-decoration: none; }
 .content code {
   font-family: var(--mono);
   font-size: 9pt;
-  background: var(--cream);
+  background: var(--mist);
   padding: 0.3mm 1mm;
   border-radius: 0.8mm;
 }
@@ -589,13 +593,13 @@ th, td {
   vertical-align: top;
 }
 th {
-  background: var(--cream);
+  background: var(--mist);
   font-family: var(--sans);
   font-weight: 700;
   color: var(--anthracite);
 }
-tbody tr:nth-child(even) { background: #FCFBF7; }
-td:first-child strong { color: var(--red); }
+tbody tr:nth-child(even) { background: #F5F6F9; }
+td:first-child strong { color: var(--navy); }
 thead { display: table-header-group; }
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -610,7 +614,7 @@ thead { display: table-header-group; }
 .ft-figure img {
   max-width: 100%;
   max-height: 62mm;
-  border: 0.8pt solid var(--gold);
+  border: 0.8pt solid var(--line);
   padding: 1.4mm;
   background: #fff;
 }
@@ -633,16 +637,16 @@ thead { display: table-header-group; }
   font-family: var(--serif-soft);
   font-weight: 600;
   font-size: 13pt;
-  color: var(--red);
+  color: var(--navy);
   margin-bottom: 1.6mm;
 }
 .table-synthese th {
-  background: var(--red);
+  background: var(--navy);
   color: #fff;
-  border-color: var(--red);
+  border-color: var(--navy);
 }
 .table-synthese tbody tr:nth-child(odd) { background: #fff; }
-.table-synthese tbody tr:nth-child(even) { background: var(--cream); }
+.table-synthese tbody tr:nth-child(even) { background: var(--mist); }
 
 .table-chiffres th {
   background: #9A7B33;
@@ -656,8 +660,8 @@ thead { display: table-header-group; }
    ════════════════════════════════════════════════════════════════════════════ */
 /* Fiche éclair : mise en page compacte tenant sur une seule page. */
 .eclair-card {
-  background: var(--cream);
-  border-top: 2.2pt solid var(--red);
+  background: var(--mist);
+  border-top: 2.2pt solid var(--navy);
   padding: 6mm 11mm 7mm 11mm;
   margin-top: 2mm;
 }
@@ -682,7 +686,7 @@ thead { display: table-header-group; }
   font-family: var(--serif-soft);
   font-style: italic;
   font-size: 12pt;
-  color: var(--red);
+  color: var(--navy);
   margin-top: 0.6mm;
 }
 .eclair-rule {
@@ -693,15 +697,15 @@ thead { display: table-header-group; }
 }
 .eclair-body { font-size: 9.3pt; line-height: 1.4; }
 .eclair-body p { margin: 1.6mm 0; }
-.eclair-body strong { color: #BE123C; }
+.eclair-body strong { color: var(--keyword); }
 .eclair-body ul { margin: 1mm 0 1mm 4mm; padding-left: 3mm; }
 .eclair-body li { margin: 0.6mm 0; }
-.eclair-body li::marker { color: var(--red); }
+.eclair-body li::marker { color: var(--navy); }
 .eclair-points-titre {
   font-family: var(--serif-soft);
   font-weight: 700;
   font-size: 11.5pt;
-  color: var(--red);
+  color: var(--navy);
   margin: 4mm 0 1.6mm 0;
   padding-bottom: 0.8mm;
   border-bottom: 0.6pt solid var(--gold);
@@ -713,8 +717,8 @@ thead { display: table-header-group; }
   font-size: 9.3pt;
   line-height: 1.38;
 }
-.eclair-points li::marker { color: var(--red); }
-.eclair-points strong { color: #BE123C; }
+.eclair-points li::marker { color: var(--navy); }
+.eclair-points strong { color: var(--keyword); }
 .eclair-footer {
   margin-top: 4.5mm;
   text-align: center;

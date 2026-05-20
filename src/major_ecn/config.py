@@ -21,26 +21,28 @@ TEMPLATES_DIR: Path = ASSETS_DIR / "templates"
 LOGS_DIR: Path = PROJECT_ROOT / "logs"
 LOGO_PATH: Path = ASSETS_DIR / "logo_major_ecn.png"
 
-# ── Charte graphique « luxe médical » ─────────────────────────────────────────
-COLOR_RED = "#E11D48"        # Rouge signature
-COLOR_GOLD = "#C9A961"       # Or accent
-COLOR_CREAM = "#FAF7F2"      # Crème fond
-COLOR_ANTHRACITE = "#1F2937"  # Gris anthracite (corps de texte)
-COLOR_PEARL = "#9CA3AF"      # Gris perle (texte secondaire)
-COLOR_OFFWHITE = "#FFFEFB"   # Blanc cassé (fond de page)
-COLOR_RED_PALE = "#FEE2E2"   # Rouge très pâle (encadrés pièges)
+# ── Charte graphique « médicale sobre » ───────────────────────────────────────
+COLOR_NAVY = "#0F1E33"       # Bleu nuit (bannières, en-têtes)
+COLOR_RED = "#E11D48"        # Rouge (accent ponctuel)
+COLOR_GOLD = "#C9A961"       # Or (liseré fin, marqueur ★)
+COLOR_MIST = "#EEF1F5"       # Gris clair froid (surfaces)
+COLOR_ANTHRACITE = "#1B2433"  # Encre (corps de texte)
+COLOR_PEARL = "#94A0B0"      # Gris perle (texte secondaire)
+COLOR_PAPER = "#FFFFFF"      # Blanc (fond de page)
+COLOR_RED_PALE = "#FDEDEC"   # Rouge très pâle (encadrés pièges)
 
 
 @dataclass(frozen=True)
 class Palette:
     """Palette de couleurs exposée aux générateurs (PDF, DOCX, HTML)."""
 
+    navy: str = COLOR_NAVY
     red: str = COLOR_RED
     gold: str = COLOR_GOLD
-    cream: str = COLOR_CREAM
+    mist: str = COLOR_MIST
     anthracite: str = COLOR_ANTHRACITE
     pearl: str = COLOR_PEARL
-    offwhite: str = COLOR_OFFWHITE
+    paper: str = COLOR_PAPER
     red_pale: str = COLOR_RED_PALE
 
 
@@ -92,7 +94,7 @@ FICHE_LEGEND: tuple[LegendEntry, ...] = (
 
 # ── Lignes-réflexe intégrées aux tableaux (libellé + couleur) ─────────────────
 REFLEXE_TYPES: dict[str, tuple[str, str]] = {
-    "a_retenir": ("À retenir", "#E11D48"),
+    "a_retenir": ("À retenir", "#0F1E33"),
     "piege": ("Piège", "#B91C1C"),
     "mnemo": ("Moyen mnémotechnique", "#9A7B33"),
 }
