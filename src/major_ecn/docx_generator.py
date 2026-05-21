@@ -21,20 +21,20 @@ from major_ecn.config import FICHE_LEGEND, REFLEXE_TYPES
 from major_ecn.models import AnalyzedImage, FicheData
 
 # ── Couleurs de la charte (hex sans « # » pour le XML, RGBColor pour les runs) ─
-NAVY = "0F1E33"
-RED = "E11D48"
-GOLD = "C9A961"
-MIST = "EEF1F5"
-PEARL = "94A0B0"
-ROW_ALT = "F5F6F9"
-SUBTITLE_BG = "E7ECF3"
+NAVY = "1C2E49"
+BURGUNDY = "8C2F39"
+GOLD = "B5934A"
+MIST = "EEF0F3"
+PEARL = "8E99A8"
+ROW_ALT = "F5F6F8"
+SUBTITLE_BG = "E7EBF1"
 
-RGB_NAVY = RGBColor(0x0F, 0x1E, 0x33)
-RGB_RED = RGBColor(0xE1, 0x1D, 0x48)
-RGB_GOLD = RGBColor(0xC9, 0xA9, 0x61)
-RGB_ANTHRACITE = RGBColor(0x1B, 0x24, 0x33)
-RGB_PEARL = RGBColor(0x94, 0xA0, 0xB0)
-RGB_KEYWORD = RGBColor(0xBE, 0x12, 0x3C)
+RGB_NAVY = RGBColor(0x1C, 0x2E, 0x49)
+RGB_BURGUNDY = RGBColor(0x8C, 0x2F, 0x39)
+RGB_GOLD = RGBColor(0xB5, 0x93, 0x4A)
+RGB_ANTHRACITE = RGBColor(0x1F, 0x2A, 0x38)
+RGB_PEARL = RGBColor(0x8E, 0x99, 0xA8)
+RGB_KEYWORD = RGBColor(0x8C, 0x2F, 0x39)
 RGB_WHITE = RGBColor(0xFF, 0xFF, 0xFF)
 
 FONT_TITLE = "Playfair Display"
@@ -200,9 +200,9 @@ def _add_page_number(paragraph) -> None:
 # ── Parsing Markdown inline ───────────────────────────────────────────────────
 # Couleurs des marqueurs de légende (★ ◆ ⚠).
 _MARKER_COLORS: dict[str, RGBColor] = {
-    "★": RGBColor(0xC9, 0xA9, 0x61),  # ★ — déjà tombé aux ECN
-    "◆": RGB_RED,                     # ◆ — haut rendement
-    "⚠": RGBColor(0xB9, 0x1C, 0x1C),  # ⚠ — piège classique
+    "★": RGB_GOLD,      # ★ — déjà tombé aux ECN
+    "◆": RGB_NAVY,      # ◆ — haut rendement
+    "⚠": RGB_BURGUNDY,  # ⚠ — piège classique
 }
 
 
@@ -420,7 +420,7 @@ class DocxFicheWriter:
             symbol_run = row.add_run(f"{entry.symbol}  ")
             symbol_run.bold = True
             symbol_run.font.size = Pt(11)
-            symbol_run.font.color.rgb = _MARKER_COLORS.get(entry.symbol, RGB_RED)
+            symbol_run.font.color.rgb = _MARKER_COLORS.get(entry.symbol, RGB_NAVY)
             label_run = row.add_run(entry.label)
             label_run.font.name = FONT_BODY
             label_run.font.size = Pt(9)
@@ -642,9 +642,9 @@ class DocxFicheWriter:
                 merged = table_row.cells[0].merge(table_row.cells[1])
                 merged.width = full_width
                 merged.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
-                label, color = REFLEXE_TYPES.get(row.kind, ("Encadré", "#0F1E33"))
-                fill = {"a_retenir": MIST, "piege": "FDEDEC",
-                        "mnemo": "FBF6E8"}.get(row.kind, MIST)
+                label, color = REFLEXE_TYPES.get(row.kind, ("Encadré", "#1C2E49"))
+                fill = {"a_retenir": MIST, "piege": "F5E9EA",
+                        "mnemo": "F6F1E4"}.get(row.kind, MIST)
                 _shade_cell(merged, fill)
                 _set_cell_borders(merged, color.lstrip("#"), sz=4, left_accent=22)
                 label_par = merged.paragraphs[0]

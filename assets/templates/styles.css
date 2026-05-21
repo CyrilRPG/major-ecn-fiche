@@ -1,6 +1,9 @@
 /* ════════════════════════════════════════════════════════════════════════════
    MAJOR ECN — Charte « médicale sobre »
    Feuille de style des fiches (WeasyPrint / HTML → PDF, format A4 portrait)
+
+   Palette : bleu nuit (structure) + bordeaux feutré (accent) + ocre doux,
+   trois tons profonds et peu saturés qui s'harmonisent sans détonner.
    ════════════════════════════════════════════════════════════════════════════ */
 
 /* ── Polices embarquées (assets/fonts/) ─────────────────────────────────────
@@ -67,15 +70,14 @@
 
 /* ── Variables de charte ──────────────────────────────────────────────────── */
 :root {
-  --navy: #0F1E33;        /* Bleu nuit — bannières, en-têtes */
-  --navy-deep: #0B1422;   /* Bleu nuit profond — bande de couverture */
-  --red: #E11D48;         /* Rouge — accent ponctuel */
-  --keyword: #BE123C;     /* Rouge profond — mots-clés en gras */
-  --gold: #C9A961;        /* Or — liseré fin, marqueur ★ */
-  --mist: #EEF1F5;        /* Gris clair froid — surfaces */
-  --line: #D3D9E2;        /* Gris très clair — filets discrets */
-  --anthracite: #1B2433;  /* Encre — corps de texte */
-  --pearl: #94A0B0;       /* Gris perle — texte secondaire */
+  --navy: #1C2E49;        /* Bleu nuit — bannières, en-têtes, structure */
+  --navy-deep: #131F33;   /* Bleu nuit profond — bande de couverture */
+  --burgundy: #8C2F39;    /* Bordeaux feutré — mots-clés, piège, marqueur ⚠ */
+  --gold: #B5934A;        /* Ocre doux — liseré fin, marqueur ★ */
+  --mist: #EEF0F3;        /* Gris clair froid — surfaces */
+  --line: #D5DAE1;        /* Gris très clair — filets discrets */
+  --anthracite: #1F2A38;  /* Encre — corps de texte */
+  --pearl: #8E99A8;       /* Gris perle — texte secondaire */
   --paper: #FFFFFF;       /* Blanc — fond de page */
   --serif: "Playfair Display", "Times New Roman", serif;
   --serif-soft: "Cormorant Garamond", "Times New Roman", serif;
@@ -332,8 +334,8 @@ tr { break-inside: avoid; }
   text-align: center;
 }
 .cover-legend-sym--1 { color: var(--gold); }
-.cover-legend-sym--2 { color: var(--red); }
-.cover-legend-sym--3 { color: #B91C1C; }
+.cover-legend-sym--2 { color: var(--navy); }
+.cover-legend-sym--3 { color: var(--burgundy); }
 .cover-legend-text {
   font-family: var(--sans);
   font-size: 9.3pt;
@@ -478,7 +480,7 @@ tr { break-inside: avoid; }
   border: 0.5pt solid var(--navy);
 }
 .ft-subtitle {
-  background: #E7ECF3;
+  background: #E7EBF1;
   color: var(--navy);
   font-family: var(--serif);
   font-weight: 700;
@@ -522,8 +524,8 @@ tr { break-inside: avoid; }
   vertical-align: top;
 }
 .ft-reflexe--a_retenir td { border-left-color: var(--navy); background: var(--mist); }
-.ft-reflexe--piege td { border-left-color: #B91C1C; background: #FDEDEC; }
-.ft-reflexe--mnemo td { border-left-color: var(--gold); background: #FBF6E8; }
+.ft-reflexe--piege td { border-left-color: var(--burgundy); background: #F5E9EA; }
+.ft-reflexe--mnemo td { border-left-color: var(--gold); background: #F6F1E4; }
 .ft-reflexe-label {
   display: block;
   margin-bottom: 1mm;
@@ -534,8 +536,8 @@ tr { break-inside: avoid; }
   text-transform: uppercase;
 }
 .ft-reflexe--a_retenir .ft-reflexe-label { color: var(--navy); }
-.ft-reflexe--piege .ft-reflexe-label { color: #B91C1C; }
-.ft-reflexe--mnemo .ft-reflexe-label { color: #9A7B33; }
+.ft-reflexe--piege .ft-reflexe-label { color: var(--burgundy); }
+.ft-reflexe--mnemo .ft-reflexe-label { color: #8A6D2E; }
 .ft-reflexe-body { display: block; }
 .ft-reflexe-body > :first-child { margin-top: 0; }
 .ft-reflexe-body > :last-child { margin-bottom: 0; }
@@ -544,13 +546,13 @@ tr { break-inside: avoid; }
 /* Marqueurs de légende insérés dans le contenu. */
 .fmark { font-weight: 700; }
 .fmark.m-ecn { color: var(--gold); }
-.fmark.m-yield { color: var(--red); }
-.fmark.m-trap { color: #B91C1C; }
+.fmark.m-yield { color: var(--navy); }
+.fmark.m-trap { color: var(--burgundy); }
 
 /* ── Typographie du contenu ──────────────────────────────────────────────── */
 .content { margin: 3mm 0; }
 .content p { margin: 2mm 0; }
-.content strong { color: var(--keyword); font-weight: 700; }
+.content strong { color: var(--burgundy); font-weight: 700; }
 .content em { color: var(--anthracite); }
 .content h1, .content h2, .content h3, .content h4 {
   font-family: var(--serif-soft);
@@ -598,7 +600,7 @@ th {
   font-weight: 700;
   color: var(--anthracite);
 }
-tbody tr:nth-child(even) { background: #F5F6F9; }
+tbody tr:nth-child(even) { background: #F5F6F8; }
 td:first-child strong { color: var(--navy); }
 thead { display: table-header-group; }
 
@@ -649,8 +651,8 @@ thead { display: table-header-group; }
 .table-synthese tbody tr:nth-child(even) { background: var(--mist); }
 
 .table-chiffres th {
-  background: #9A7B33;
-  border-color: #9A7B33;
+  background: #8A6D2E;
+  border-color: #8A6D2E;
 }
 .table-chiffres td:first-child { font-weight: 700; }
 .table-chiffres td:first-child strong { color: var(--anthracite); }
@@ -697,7 +699,7 @@ thead { display: table-header-group; }
 }
 .eclair-body { font-size: 9.3pt; line-height: 1.4; }
 .eclair-body p { margin: 1.6mm 0; }
-.eclair-body strong { color: var(--keyword); }
+.eclair-body strong { color: var(--burgundy); }
 .eclair-body ul { margin: 1mm 0 1mm 4mm; padding-left: 3mm; }
 .eclair-body li { margin: 0.6mm 0; }
 .eclair-body li::marker { color: var(--navy); }
@@ -718,7 +720,7 @@ thead { display: table-header-group; }
   line-height: 1.38;
 }
 .eclair-points li::marker { color: var(--navy); }
-.eclair-points strong { color: var(--keyword); }
+.eclair-points strong { color: var(--burgundy); }
 .eclair-footer {
   margin-top: 4.5mm;
   text-align: center;

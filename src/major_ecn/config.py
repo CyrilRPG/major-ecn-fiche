@@ -22,14 +22,14 @@ LOGS_DIR: Path = PROJECT_ROOT / "logs"
 LOGO_PATH: Path = ASSETS_DIR / "logo_major_ecn.png"
 
 # ── Charte graphique « médicale sobre » ───────────────────────────────────────
-COLOR_NAVY = "#0F1E33"       # Bleu nuit (bannières, en-têtes)
-COLOR_RED = "#E11D48"        # Rouge (accent ponctuel)
-COLOR_GOLD = "#C9A961"       # Or (liseré fin, marqueur ★)
-COLOR_MIST = "#EEF1F5"       # Gris clair froid (surfaces)
-COLOR_ANTHRACITE = "#1B2433"  # Encre (corps de texte)
-COLOR_PEARL = "#94A0B0"      # Gris perle (texte secondaire)
+COLOR_NAVY = "#1C2E49"       # Bleu nuit (bannières, en-têtes, structure)
+COLOR_BURGUNDY = "#8C2F39"   # Bordeaux feutré (mots-clés, piège, accent)
+COLOR_GOLD = "#B5934A"       # Ocre doux (liseré fin, marqueur ★)
+COLOR_MIST = "#EEF0F3"       # Gris clair froid (surfaces)
+COLOR_ANTHRACITE = "#1F2A38"  # Encre (corps de texte)
+COLOR_PEARL = "#8E99A8"      # Gris perle (texte secondaire)
 COLOR_PAPER = "#FFFFFF"      # Blanc (fond de page)
-COLOR_RED_PALE = "#FDEDEC"   # Rouge très pâle (encadrés pièges)
+COLOR_BURGUNDY_PALE = "#F5E9EA"  # Bordeaux très pâle (encadrés pièges)
 
 
 @dataclass(frozen=True)
@@ -37,13 +37,13 @@ class Palette:
     """Palette de couleurs exposée aux générateurs (PDF, DOCX, HTML)."""
 
     navy: str = COLOR_NAVY
-    red: str = COLOR_RED
+    burgundy: str = COLOR_BURGUNDY
     gold: str = COLOR_GOLD
     mist: str = COLOR_MIST
     anthracite: str = COLOR_ANTHRACITE
     pearl: str = COLOR_PEARL
     paper: str = COLOR_PAPER
-    red_pale: str = COLOR_RED_PALE
+    burgundy_pale: str = COLOR_BURGUNDY_PALE
 
 
 PALETTE = Palette()
@@ -94,9 +94,9 @@ FICHE_LEGEND: tuple[LegendEntry, ...] = (
 
 # ── Lignes-réflexe intégrées aux tableaux (libellé + couleur) ─────────────────
 REFLEXE_TYPES: dict[str, tuple[str, str]] = {
-    "a_retenir": ("À retenir", "#0F1E33"),
-    "piege": ("Piège", "#B91C1C"),
-    "mnemo": ("Moyen mnémotechnique", "#9A7B33"),
+    "a_retenir": ("À retenir", "#1C2E49"),
+    "piege": ("Piège", "#8C2F39"),
+    "mnemo": ("Moyen mnémotechnique", "#8A6D2E"),
 }
 
 # ── Paramètres métier ─────────────────────────────────────────────────────────

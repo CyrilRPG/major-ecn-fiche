@@ -64,7 +64,7 @@ def _make_schema(path: Path, title: str, nodes: list[str]) -> None:
 
     width, height = 960, 430
     navy, gold, anthracite, mist = (
-        (15, 30, 51), (201, 169, 97), (27, 36, 51), (238, 241, 245),
+        (28, 46, 73), (181, 147, 74), (31, 42, 56), (238, 240, 243),
     )
     image = Image.new("RGB", (width, height), (255, 255, 255))
     draw = ImageDraw.Draw(image)
