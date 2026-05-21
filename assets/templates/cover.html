@@ -1,15 +1,8 @@
 {# Page de garde — design « luxe médical ». Variables : fiche, logo_uri. #}
 <section class="cover">
 
-  {# Bande verticale bleu nuit signature + motif croix médicale or #}
-  <div class="cover-band">
-    {% for _ in range(4) %}
-    <svg class="cover-cross" viewBox="0 0 100 100" aria-hidden="true">
-      <path d="M38 8 H62 V38 H92 V62 H62 V92 H38 V62 H8 V38 H38 Z"
-            fill="#B5934A" fill-opacity="0.22" />
-    </svg>
-    {% endfor %}
-  </div>
+  {# Bande verticale bleu nuit signature #}
+  <div class="cover-band"></div>
 
   {# Bloc central : logo, matière, titre, année #}
   <div class="cover-content">

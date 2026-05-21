@@ -208,13 +208,6 @@ tr { break-inside: avoid; }
   height: 297mm;
   background: var(--navy-deep);
 }
-.cover-cross {
-  display: block;
-  width: 15mm;
-  height: 15mm;
-  margin: 34mm auto 0 auto;
-}
-.cover-cross:first-child { margin-top: 40mm; }
 
 /* Bloc central : logo, matière, titre, année. */
 .cover-content {
