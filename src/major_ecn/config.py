@@ -20,6 +20,7 @@ FONTS_DIR: Path = ASSETS_DIR / "fonts"
 TEMPLATES_DIR: Path = ASSETS_DIR / "templates"
 LOGS_DIR: Path = PROJECT_ROOT / "logs"
 LOGO_PATH: Path = ASSETS_DIR / "logo_major_ecn.png"
+WATERMARK_PATH: Path = ASSETS_DIR / "logo_watermark.png"
 
 # ── Charte graphique « médicale sobre » ───────────────────────────────────────
 COLOR_NAVY = "#1C2E49"       # Bleu nuit (bannières, en-têtes, structure)

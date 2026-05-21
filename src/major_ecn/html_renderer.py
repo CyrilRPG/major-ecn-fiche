@@ -19,6 +19,7 @@ from major_ecn.config import (
     PALETTE,
     REFLEXE_TYPES,
     TEMPLATES_DIR,
+    WATERMARK_PATH,
 )
 from major_ecn.models import FicheData
 
@@ -130,6 +131,7 @@ def render_fiche_html(fiche: FicheData) -> str:
         css=css_content,
         palette=PALETTE,
         logo_uri=_file_uri(LOGO_PATH),
+        watermark_uri=_file_uri(WATERMARK_PATH),
         legend=FICHE_LEGEND,
         reflexe_labels={key: label for key, (label, _) in REFLEXE_TYPES.items()},
     )

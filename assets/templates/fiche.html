@@ -7,45 +7,20 @@
 </head>
 <body>
 
+  {# Filigrane discret répété au centre de chaque page (masqué sous la
+     page de garde, qui est opaque et de z-index supérieur). #}
+  {% if watermark_uri %}
+  <div class="page-watermark"><img src="{{ watermark_uri }}" alt="" /></div>
+  {% endif %}
+
   {# Sources des chaînes dynamiques (en-tête / pied de page) #}
   <span class="string-source string-source--cours">{{ fiche.nom_cours }}</span>
   <span class="string-source string-source--footer">Major ECN&nbsp;&middot;&nbsp;{{ fiche.annee }}</span>
 
-  {# ── 1. PAGE DE GARDE ── #}
+  {# ── 1. PAGE DE GARDE (inclut le plan des grandes parties) ── #}
   {% include 'cover.html' %}
 
-  {# ── 2. PLAN DU COURS ── #}
-  <section class="page plan-page">
-    <h2 class="page-title">Plan du cours</h2>
-    <p class="plan-subtitle">{{ fiche.matiere }}&nbsp;&middot;&nbsp;{{ fiche.nom_cours }}</p>
-
-    <ol class="plan-list">
-      {% for partie in fiche.plan %}
-      <li class="plan-partie">
-        <a class="plan-partie-head" href="#partie-{{ loop.index }}">
-          <span class="plan-num">{{ partie.numero }}</span>
-          <span class="plan-partie-title">{{ partie.titre }}</span>
-        </a>
-        {% if partie.resume %}
-        <p class="plan-resume">{{ partie.resume }}</p>
-        {% endif %}
-        {% if partie.sous_parties %}
-        <ul class="plan-sous">
-          {% for sp in partie.sous_parties %}
-          <li>
-            <span class="plan-sous-letter">{{ sp.lettre }}.</span>
-            <span class="plan-sous-title">{{ sp.titre }}</span>
-            {% if sp.resume %}<span class="plan-sous-resume"> — {{ sp.resume }}</span>{% endif %}
-          </li>
-          {% endfor %}
-        </ul>
-        {% endif %}
-      </li>
-      {% endfor %}
-    </ol>
-  </section>
-
-  {# ── 3. CORPS DE LA FICHE (tableaux structurés) ── #}
+  {# ── 2. CORPS DE LA FICHE (tableaux structurés) ── #}
   {% for partie in fiche.parties %}
   <section class="partie-page{% if loop.first %} partie-page--first{% endif %}"
            id="partie-{{ loop.index }}">
@@ -120,7 +95,7 @@
   </section>
   {% endfor %}
 
-  {# ── 4. SYNTHÈSE & CHIFFRES-CLÉS ── #}
+  {# ── 3. SYNTHÈSE & CHIFFRES-CLÉS ── #}
   {% if fiche.tableaux or fiche.chiffres_cles %}
   <section class="page synthese-page">
     <div class="partie-banner partie-banner--plain">
@@ -143,7 +118,7 @@
   </section>
   {% endif %}
 
-  {# ── 5. FICHE ÉCLAIR ── #}
+  {# ── 4. FICHE ÉCLAIR ── #}
   {% if fiche.fiche_eclair_md or fiche.points_cles %}
   <section class="page eclair-page">
     <div class="eclair-card">

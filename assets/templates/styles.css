@@ -75,7 +75,7 @@
   --burgundy: #8C2F39;    /* Bordeaux feutré — mots-clés, piège, marqueur ⚠ */
   --gold: #B5934A;        /* Ocre doux — liseré fin, marqueur ★ */
   --mist: #EEF0F3;        /* Gris clair froid — surfaces */
-  --line: #D5DAE1;        /* Gris très clair — filets discrets */
+  --line: #D3D9E2;        /* Gris très clair — filets discrets */
   --anthracite: #1F2A38;  /* Encre — corps de texte */
   --pearl: #8E99A8;       /* Gris perle — texte secondaire */
   --paper: #FFFFFF;       /* Blanc — fond de page */
@@ -164,7 +164,7 @@ html, body {
 .string-source--cours { string-set: course-name content(); }
 .string-source--footer { string-set: footer-text content(); }
 /* Section courante affichée dans l'en-tête de page. */
-.page-title, .partie-banner-title, .eclair-title {
+.partie-banner-title, .eclair-title {
   string-set: section-courante content();
 }
 
@@ -176,242 +176,172 @@ tr { break-inside: avoid; }
 
 /* Le corps s'écoule en continu : une bannière a toujours du contenu autour
    d'elle (jamais de page réduite à un seul en-tête). Seule la 1re grande
-   partie ouvre une nouvelle page, après le plan. */
+   partie ouvre une nouvelle page, après la page de garde. */
 .partie-page { margin-top: 9mm; }
 .partie-page--first { break-before: page; margin-top: 0; }
 
 /* Signets PDF (plan de navigation). */
-.page-title { bookmark-level: 1; }
 .partie-banner-title { bookmark-level: 1; }
 .ft-subtitle-text { bookmark-level: 2; }
 /* Les en-têtes de tableau sont répétés à chaque page : un seul signet par
    partie / sous-partie (le 1er), pas un par occurrence répétée. */
 .partie-banner-title--repeat { bookmark-level: none; }
 
+/* Filigrane : logo gris très clair (transparence intégrée à l'image),
+   répété au centre de chaque page. En position fixe, il se répète sur
+   toutes les pages ; la page de garde, opaque et de z-index supérieur,
+   le recouvre entièrement. */
+.page-watermark {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
+.page-watermark img {
+  display: block;
+  width: 156mm;
+}
+
 /* ════════════════════════════════════════════════════════════════════════════
    1. PAGE DE GARDE
    ════════════════════════════════════════════════════════════════════════════ */
 .cover {
   position: relative;
+  z-index: 2;
   width: 210mm;
   height: 297mm;
   background: var(--paper);
   overflow: hidden;
 }
-
-/* Bande verticale bleu nuit signature (15 % de la largeur). */
 .cover-band {
   position: absolute;
   top: 0;
   left: 0;
-  width: 31.5mm;
+  width: 13mm;
   height: 297mm;
   background: var(--navy-deep);
 }
-
-/* Bloc central : logo, matière, titre, année. */
 .cover-content {
   position: absolute;
   top: 0;
-  bottom: 0;
-  left: 31.5mm;
+  left: 13mm;
   right: 0;
-  padding: 40mm 24mm 44mm 24mm;
+  bottom: 0;
+  padding: 30mm 24mm 24mm 26mm;
+}
+
+/* ── Identité du cours ── */
+.cover-head {
+  padding-bottom: 9mm;
+  border-bottom: 0.8pt solid var(--line);
 }
 .cover-logo {
-  display: block;
-  max-width: 60mm;
-  max-height: 36mm;
-  margin: 0 0 0 auto;
+  float: right;
+  width: 43mm;
+  margin: 1mm -2mm 6mm 12mm;
 }
-.cover-logo--placeholder {
-  font-family: var(--serif);
-  font-size: 24pt;
-  font-weight: 700;
-  color: var(--navy);
-  letter-spacing: 0.08em;
-  text-align: right;
-  border: 1pt solid var(--gold);
-  padding: 6mm 8mm;
-  width: 64mm;
-}
-.cover-spacer { height: 66mm; }
-
 .cover-matiere {
-  text-align: right;
   font-family: var(--sans);
-  font-size: 13pt;
-  font-weight: 500;
-  letter-spacing: 0.42em;
+  font-size: 12pt;
+  font-weight: 600;
+  letter-spacing: 0.34em;
   text-transform: uppercase;
   color: var(--gold);
 }
-.cover-rule {
-  width: 48mm;
-  height: 0.9pt;
-  background: var(--gold);
-  margin: 7mm 0 7mm auto;
-}
 .cover-title {
-  text-align: right;
   font-family: var(--serif);
   font-weight: 700;
-  font-size: 39pt;
-  line-height: 1.1;
-  color: var(--anthracite);
+  font-size: 38pt;
+  line-height: 1.08;
+  color: var(--navy);
+  margin-top: 6mm;
 }
 .cover-year {
-  text-align: right;
   font-family: var(--serif-soft);
   font-style: italic;
-  font-size: 16pt;
-  color: var(--anthracite);
+  font-size: 15pt;
+  color: var(--pearl);
+  margin-top: 4.5mm;
 }
 .cover-item {
-  text-align: right;
   font-family: var(--sans);
-  font-size: 9.5pt;
-  letter-spacing: 0.16em;
+  font-size: 9pt;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--pearl);
-  margin-top: 4mm;
+  margin-top: 3mm;
 }
 
-/* Cartouche élégant en bas à droite. */
-.cover-cartouche {
-  position: absolute;
-  right: 24mm;
-  bottom: 30mm;
-  text-align: center;
-}
-.cover-cartouche-line {
-  display: block;
-  width: 32mm;
-  height: 0.7pt;
-  background: var(--gold);
-  margin: 2.4mm auto;
-}
-.cover-cartouche-text {
-  display: block;
-  font-family: var(--serif-soft);
-  font-size: 12pt;
-  font-style: italic;
-  letter-spacing: 0.1em;
-  color: var(--navy);
-}
-
-/* Légende des marqueurs (bas-gauche de la page de garde). */
-.cover-legend {
-  position: absolute;
-  left: 40mm;
-  bottom: 26mm;
-  width: 58mm;
-}
-.cover-legend-title {
+/* Étiquette de section (Plan / Légende). */
+.cover-section-label {
   font-family: var(--sans);
   font-size: 9pt;
   font-weight: 700;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: var(--gold);
-  padding-bottom: 1.6mm;
-  margin-bottom: 2.4mm;
-  border-bottom: 0.7pt solid var(--gold);
+  color: var(--navy);
 }
-.cover-legend-row { margin: 2mm 0; }
-.cover-legend-sym {
+
+/* ── Plan : grandes parties uniquement ── */
+.cover-plan {
+  clear: both;
+  margin-top: 13mm;
+}
+.cover-plan-list {
+  list-style: none;
+  margin-top: 4mm;
+}
+.cover-plan-item { break-inside: avoid; }
+.cover-plan-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  padding: 3.3mm 1mm;
+  border-bottom: 0.5pt solid var(--line);
+}
+.cover-plan-num {
   display: inline-block;
-  width: 7mm;
-  font-size: 11pt;
+  width: 15mm;
+  font-family: var(--serif);
   font-weight: 700;
-  text-align: center;
+  font-size: 14.5pt;
+  color: var(--gold);
+}
+.cover-plan-text {
+  font-family: var(--serif-soft);
+  font-weight: 600;
+  font-size: 13.5pt;
+  color: var(--anthracite);
+}
+
+/* ── Légende des marqueurs ── */
+.cover-legend {
+  position: absolute;
+  left: 26mm;
+  right: 24mm;
+  bottom: 24mm;
+  padding-top: 6mm;
+  border-top: 0.8pt solid var(--line);
+}
+.cover-legend-items { margin-top: 3mm; }
+.cover-legend-item { margin-right: 9mm; }
+.cover-legend-sym {
+  font-weight: 700;
+  font-size: 11pt;
+  margin-right: 1.6mm;
 }
 .cover-legend-sym--1 { color: var(--gold); }
 .cover-legend-sym--2 { color: var(--navy); }
 .cover-legend-sym--3 { color: var(--burgundy); }
 .cover-legend-text {
   font-family: var(--sans);
-  font-size: 9.3pt;
+  font-size: 9pt;
   color: var(--anthracite);
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   2. PLAN DU COURS
-   ════════════════════════════════════════════════════════════════════════════ */
-.page-title {
-  font-family: var(--serif);
-  font-weight: 700;
-  font-size: 21pt;
-  color: var(--anthracite);
-  text-align: center;
-  padding: 2.8mm 0;
-  border-top: 1.2pt solid var(--navy);
-  border-bottom: 1.2pt solid var(--navy);
-}
-.plan-subtitle {
-  text-align: center;
-  font-family: var(--serif-soft);
-  font-style: italic;
-  font-size: 11pt;
-  color: var(--gold);
-  margin: 2.4mm 0 5mm 0;
-}
-.plan-list { list-style: none; }
-/* Plan tenant sur une seule page : mise en page compacte. */
-.plan-partie {
-  margin: 0 0 3.6mm 0;
-  break-inside: avoid;
-}
-.plan-partie-head {
-  display: block;
-  border-bottom: 0.6pt solid var(--line);
-  padding-bottom: 1mm;
-  text-decoration: none;
-  color: inherit;
-}
-.plan-num {
-  font-family: var(--serif);
-  font-weight: 700;
-  font-size: 12.5pt;
-  color: var(--navy);
-  margin-right: 3mm;
-}
-.plan-partie-title {
-  font-family: var(--serif-soft);
-  font-weight: 600;
-  font-size: 12.5pt;
-  color: var(--anthracite);
-}
-.plan-resume {
-  font-family: var(--serif-soft);
-  font-style: italic;
-  font-size: 9.4pt;
-  color: var(--pearl);
-  margin: 0.6mm 0 0 8mm;
-}
-.plan-sous {
-  list-style: none;
-  margin: 1.4mm 0 0 8mm;
-}
-.plan-sous li {
-  margin: 0.9mm 0;
-  padding-left: 5.5mm;
-  font-size: 9.8pt;
-}
-.plan-sous-letter {
-  color: var(--gold);
-  font-weight: 700;
-  margin-left: -5.5mm;
-  margin-right: 2mm;
-}
-.plan-sous-title {
-  font-weight: 600;
-  color: var(--anthracite);
-}
-.plan-sous-resume { display: none; }
-
-/* ════════════════════════════════════════════════════════════════════════════
-   3. CORPS DE LA FICHE
+   2. CORPS DE LA FICHE
    ════════════════════════════════════════════════════════════════════════════ */
 .partie-banner {
   background: var(--navy);
@@ -598,7 +528,7 @@ td:first-child strong { color: var(--navy); }
 thead { display: table-header-group; }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   4. FIGURES & IMAGES (intégrées dans la cellule d'une ligne de tableau)
+   3. FIGURES & IMAGES (intégrées dans la cellule d'une ligne de tableau)
    ════════════════════════════════════════════════════════════════════════════ */
 /* La figure est dans la cellule de la dernière ligne : jamais seule, jamais
    coupée (la ligne entière, indivisible, se déplace si besoin). */
@@ -622,7 +552,7 @@ thead { display: table-header-group; }
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   5. SYNTHÈSE & CHIFFRES-CLÉS
+   4. SYNTHÈSE & CHIFFRES-CLÉS
    ════════════════════════════════════════════════════════════════════════════ */
 .synthese-bloc {
   margin: 6mm 0;
@@ -651,7 +581,7 @@ thead { display: table-header-group; }
 .table-chiffres td:first-child strong { color: var(--anthracite); }
 
 /* ════════════════════════════════════════════════════════════════════════════
-   6. FICHE ÉCLAIR
+   5. FICHE ÉCLAIR
    ════════════════════════════════════════════════════════════════════════════ */
 /* Fiche éclair : mise en page compacte tenant sur une seule page. */
 .eclair-card {
