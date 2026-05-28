@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(python --version)",
+      "Bash(python -c ' *)",
+      "Bash(git init *)",
+      "Bash(git remote *)",
+      "Bash(git fetch *)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(python -m pip install python-docx jinja2 markupsafe markdown python-dotenv)",
+      "Bash(python -m pip install python-docx)",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\steev\\\\Downloads\\\\major-ecn-fiche-claude-major-ecn-generator-GW3E8\\\\major-ecn-fiche-claude-major-ecn-generator-GW3E8\\\\output\" | Format-Table Name, @{N='Size\\(KB\\)';E={[math]::Round\\($_.Length/1KB,1\\)}}, LastWriteTime)"
+    ]
+  }
+}

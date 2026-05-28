@@ -267,17 +267,18 @@ class DocxFicheWriter:
         section = self.doc.sections[0]
         section.page_width = Mm(210)
         section.page_height = Mm(297)
-        section.top_margin = Mm(22)
-        section.bottom_margin = Mm(18)
+        section.top_margin = Mm(24)
+        section.bottom_margin = Mm(22)
         section.left_margin = Mm(18)
         section.right_margin = Mm(18)
         section.different_first_page_header_footer = True
 
         normal = self.doc.styles["Normal"]
         normal.font.name = FONT_BODY
-        normal.font.size = Pt(10.5)
+        normal.font.size = Pt(10.4)
         normal.font.color.rgb = RGB_ANTHRACITE
         normal.paragraph_format.space_after = Pt(3)
+        normal.paragraph_format.line_spacing = 1.5
 
     def _configure_header_footer(self, fiche: FicheData) -> None:
         """Configure l'en-tête (cours) et le pied de page (mention + pagination)."""
@@ -291,7 +292,7 @@ class DocxFicheWriter:
         header_run.font.size = Pt(8)
         header_run.italic = True
         header_run.font.color.rgb = RGB_PEARL
-        _set_paragraph_borders(header_par, bottom={"sz": 6, "color": NAVY, "space": 4})
+        _set_paragraph_borders(header_par, top={"sz": 6, "color": NAVY, "space": 4})
 
         # Pied de page : mention à gauche, pagination « n / total » à droite.
         footer = section.footer
@@ -302,9 +303,9 @@ class DocxFicheWriter:
         )
         footer_run = footer_par.add_run(f"MAJOR ECN  ·  {fiche.annee}\t")
         footer_run.font.name = FONT_BODY
-        footer_run.font.size = Pt(8)
+        footer_run.font.size = Pt(7.6)
         footer_run.font.color.rgb = RGB_PEARL
-        _set_char_spacing(footer_run, 24)
+        _set_char_spacing(footer_run, 28)
         _add_page_number(footer_par)
 
     def _add_watermark(self) -> None:
@@ -416,7 +417,7 @@ class DocxFicheWriter:
         title_par.paragraph_format.space_before = Pt(8)
         title_run = title_par.add_run(fiche.nom_cours)
         title_run.font.name = FONT_TITLE
-        title_run.font.size = Pt(33)
+        title_run.font.size = Pt(38)
         title_run.bold = True
         title_run.font.color.rgb = RGB_NAVY
 
@@ -447,12 +448,12 @@ class DocxFicheWriter:
             num_run = line.add_run(f"{partie.numero}    ")
             num_run.font.name = FONT_TITLE
             num_run.bold = True
-            num_run.font.size = Pt(13)
+            num_run.font.size = Pt(14.5)
             num_run.font.color.rgb = RGB_GOLD
             part_run = line.add_run(partie.titre)
             part_run.font.name = FONT_SOFT
             part_run.bold = True
-            part_run.font.size = Pt(12.5)
+            part_run.font.size = Pt(13.5)
             part_run.font.color.rgb = RGB_ANTHRACITE
 
         self._cover_legend(content)
@@ -520,7 +521,7 @@ class DocxFicheWriter:
         run = paragraph.add_run(text)
         run.font.name = FONT_TITLE
         run.bold = True
-        run.font.size = Pt(16)
+        run.font.size = Pt(17)
         run.font.color.rgb = RGB_WHITE
 
     def _build_souspartie_table(self, numero: str, titre: str, sous) -> None:
@@ -592,7 +593,7 @@ class DocxFicheWriter:
         title_run = title_par.add_run(f"{sous.lettre}.  {sous.titre}")
         title_run.font.name = FONT_TITLE
         title_run.bold = True
-        title_run.font.size = Pt(13)
+        title_run.font.size = Pt(12.5)
         title_run.font.color.rgb = RGB_NAVY
 
         # Lignes : standard (concept | détail) ou réflexe (pleine largeur).
@@ -607,7 +608,7 @@ class DocxFicheWriter:
                 detail_cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
                 concept_par = concept_cell.paragraphs[0]
                 concept_par.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                _add_inline_runs(concept_par, row.concept, size=10, bold=True,
+                _add_inline_runs(concept_par, row.concept, size=9.7, bold=True,
                                  keyword_color=False)
                 self._fill_detail_cell(detail_cell, row.detail_md)
                 target_cell = detail_cell
@@ -673,55 +674,90 @@ class DocxFicheWriter:
 
     # -- 5. Fiche éclair -------------------------------------------------------
     def _build_eclair(self, fiche: FicheData, logo_path: Path | None) -> None:
-        eyebrow = self.doc.add_paragraph()
+        table = self.doc.add_table(rows=1, cols=1)
+        table.alignment = WD_TABLE_ALIGNMENT.CENTER
+        table.autofit = False
+        _clear_table_borders(table)
+        cell = table.rows[0].cells[0]
+        cell.width = Mm(CONTENT_WIDTH_MM)
+        _shade_cell(cell, MIST)
+        _set_cell_borders(cell, NAVY, sz=4, left_accent=None)
+        borders = OxmlElement("w:tcBorders")
+        borders.append(_border_element("w:top", sz=18, color=NAVY))
+        borders.append(_border_element("w:left", val="none"))
+        borders.append(_border_element("w:bottom", val="none"))
+        borders.append(_border_element("w:right", val="none"))
+        cell._tc.get_or_add_tcPr().insert_element_before(borders, *_TCPR_AFTER_BORDERS)
+
+        eyebrow = cell.paragraphs[0]
         eyebrow.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        eyebrow.paragraph_format.space_before = Pt(16)
+        eyebrow.paragraph_format.space_before = Pt(12)
         eyebrow_run = eyebrow.add_run("RÉVISION EXPRESS")
         eyebrow_run.font.name = FONT_BODY
-        eyebrow_run.font.size = Pt(9)
+        eyebrow_run.font.size = Pt(8.5)
         eyebrow_run.font.color.rgb = RGB_GOLD
         _set_char_spacing(eyebrow_run, 56)
 
-        title = self.doc.add_paragraph()
+        title = cell.add_paragraph()
         title.alignment = WD_ALIGN_PARAGRAPH.CENTER
         title_run = title.add_run("Fiche éclair")
         title_run.font.name = FONT_TITLE
         title_run.bold = True
-        title_run.font.size = Pt(26)
+        title_run.font.size = Pt(21)
         title_run.font.color.rgb = RGB_ANTHRACITE
 
-        subtitle = self.doc.add_paragraph()
+        subtitle = cell.add_paragraph()
         subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        subtitle.paragraph_format.space_after = Pt(12)
         sub_run = subtitle.add_run(fiche.nom_cours)
         sub_run.font.name = FONT_SOFT
         sub_run.italic = True
-        sub_run.font.size = Pt(13)
+        sub_run.font.size = Pt(12)
         sub_run.font.color.rgb = RGB_NAVY
 
+        rule = cell.add_paragraph()
+        rule.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        rule.paragraph_format.space_before = Pt(4)
+        rule.paragraph_format.space_after = Pt(6)
+        rule_run = rule.add_run("━━━━━━━━━━━━━")
+        rule_run.font.size = Pt(6)
+        rule_run.font.color.rgb = RGB_GOLD
+
         if fiche.fiche_eclair_md:
-            self._render_markdown(fiche.fiche_eclair_md)
+            self._render_markdown(fiche.fiche_eclair_md, container=cell)
 
         if fiche.points_cles:
-            self._info_title("À retenir absolument")
+            pts_title = cell.add_paragraph()
+            pts_title.paragraph_format.space_before = Pt(6)
+            pts_title.paragraph_format.space_after = Pt(3)
+            pts_run = pts_title.add_run("À retenir absolument")
+            pts_run.font.name = FONT_SOFT
+            pts_run.bold = True
+            pts_run.font.size = Pt(11.5)
+            pts_run.font.color.rgb = RGB_NAVY
+            _set_paragraph_borders(pts_title, bottom={"sz": 4, "color": GOLD, "space": 2})
             for point in fiche.points_cles:
-                paragraph = self.doc.add_paragraph(style="List Bullet")
-                paragraph.paragraph_format.space_after = Pt(4)
-                _add_inline_runs(paragraph, point, size=10.6)
+                paragraph = cell.add_paragraph()
+                paragraph.paragraph_format.space_after = Pt(3)
+                paragraph.paragraph_format.left_indent = Mm(5)
+                bullet_run = paragraph.add_run("•  ")
+                bullet_run.font.color.rgb = RGB_NAVY
+                bullet_run.font.size = Pt(9.3)
+                _add_inline_runs(paragraph, point, size=9.3)
 
-        footer = self.doc.add_paragraph()
+        footer = cell.add_paragraph()
         footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        footer.paragraph_format.space_before = Pt(16)
+        footer.paragraph_format.space_before = Pt(10)
         if logo_path is not None and logo_path.exists():
             try:
-                footer.add_run().add_picture(str(logo_path), width=Mm(22))
+                footer.add_run().add_picture(str(logo_path), width=Mm(19))
             except Exception:  # noqa: BLE001
                 pass
-        footer_text = self.doc.add_paragraph()
+        footer_text = cell.add_paragraph()
         footer_text.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        footer_text.paragraph_format.space_after = Pt(8)
         ft_run = footer_text.add_run(f"MAJOR ECN  ·  {fiche.annee}")
         ft_run.font.name = FONT_BODY
-        ft_run.font.size = Pt(8.5)
+        ft_run.font.size = Pt(8)
         ft_run.font.color.rgb = RGB_PEARL
         _set_char_spacing(ft_run, 36)
 
@@ -753,7 +789,7 @@ class DocxFicheWriter:
 
     # -- Convertisseur Markdown → Word -----------------------------------------
     def _render_markdown(self, markdown: str, *, container=None,
-                         synthese: bool = False) -> None:
+                         synthese: bool = False, font_size: float = 9.7) -> None:
         """Convertit un bloc Markdown en paragraphes et tableaux Word.
 
         `container` est le réceptacle (document ou cellule de tableau).
@@ -798,7 +834,7 @@ class DocxFicheWriter:
             # Paragraphe simple.
             self._indent_stack = []
             paragraph = target.add_paragraph()
-            _add_inline_runs(paragraph, stripped, size=10)
+            _add_inline_runs(paragraph, stripped, size=font_size)
             index += 1
 
     def _level_for(self, indent: int) -> int:
@@ -810,7 +846,8 @@ class DocxFicheWriter:
             stack.append(indent)
         return min(len(stack) - 1, 2)
 
-    def _add_bullet(self, text: str, level: int, container) -> None:
+    def _add_bullet(self, text: str, level: int, container,
+                    font_size: float = 9.7) -> None:
         style = ("List Bullet", "List Bullet 2", "List Bullet 3")[level]
         try:
             paragraph = container.add_paragraph(style=style)
@@ -818,7 +855,7 @@ class DocxFicheWriter:
             paragraph = container.add_paragraph(style="List Bullet")
             paragraph.paragraph_format.left_indent = Mm(6 + 6 * level)
         paragraph.paragraph_format.space_after = Pt(2)
-        _add_inline_runs(paragraph, text, size=10)
+        _add_inline_runs(paragraph, text, size=font_size)
 
     def _add_content_heading(self, text: str, container) -> None:
         paragraph = container.add_paragraph()
