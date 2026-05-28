@@ -88,7 +88,7 @@ RÈGLES STRICTES :
 - Reste strictement fidèle au cours source — n'invente aucune donnée.
 
 MARQUEURS — insère ces symboles JUSTE AVANT le terme concerné :
-- ★ devant une notion déjà tombée aux ECN ;
+- ★ devant une notion déjà tombée aux EVC ;
 - ◆ devant une notion à haut rendement (à maîtriser en priorité) ;
 - ⚠ devant un piège classique ou une erreur fréquente.
 

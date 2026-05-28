@@ -9,8 +9,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from major_ecn.models import (
-    FicheData, FicheRow, Partie, PlanPartie, PlanSousPartie,
-    SousPartie, TableauSynthese, UsageStats,
+    AnalyzedImage, ExtractedImage, FicheData, FicheRow, Partie,
+    PlanPartie, PlanSousPartie, SousPartie, TableauSynthese, UsageStats,
 )
 from major_ecn.config import LOGO_PATH
 from major_ecn.docx_generator import render_docx
@@ -817,11 +817,94 @@ def build_pneumologie_fiche() -> FicheData:
     )
 
 
+def _make_analyzed_image(path: Path, desc: str, concept: str,
+                         section: str, fig_num: int,
+                         img_type: str = "schema") -> AnalyzedImage:
+    """Crée un AnalyzedImage à partir d'un fichier image source."""
+    from PIL import Image as PILImage
+    data = path.read_bytes()
+    pil = PILImage.open(path)
+    w, h = pil.size
+    source = ExtractedImage(
+        data=data, ext="png", page=0, index=fig_num,
+        width=w, height=h, sha="",
+    )
+    return AnalyzedImage(
+        source=source, description=desc, concept_lie=concept,
+        pertinence=9, type=img_type, section_suggeree=section,
+        saved_path=path, figure_number=fig_num,
+    )
+
+
+_SOURCE_IMAGES: list[dict] = [
+    # I. Asthme
+    {"file": "source_02_p2.png", "partie": 0, "sp": 2, "desc": "Courbe débit-volume : TVO réversible", "concept": "EFR asthme", "type": "schema"},
+    {"file": "source_04_p5.png", "partie": 0, "sp": 4, "desc": "Algorithme PEC exacerbation d'asthme", "concept": "Exacerbation asthme", "type": "schema"},
+    {"file": "source_05_p5.png", "partie": 0, "sp": 5, "desc": "Algorithme du nourrisson siffleur", "concept": "Asthme enfant", "type": "schema"},
+    # II. BPCO
+    {"file": "source_07_p7.png", "partie": 1, "sp": 0, "desc": "Emphysème centrolobulaire vs panlobulaire", "concept": "Types d'emphysème", "type": "schema"},
+    {"file": "source_08_p7.png", "partie": 1, "sp": 1, "desc": "BPCO : thorax en tonneau (clinique + radio)", "concept": "Distension thoracique BPCO", "type": "photo_clinique"},
+    {"file": "source_11_p7.png", "partie": 1, "sp": 0, "desc": "Emphysème et obstruction bronchique : histologie", "concept": "Physiopathologie BPCO", "type": "schema"},
+    {"file": "source_12_p8.png", "partie": 1, "sp": 2, "desc": "Classification GOLD et évaluation ABCD", "concept": "Stades GOLD BPCO", "type": "schema"},
+    {"file": "source_16_p10.png", "partie": 1, "sp": 3, "desc": "Algorithme de traitement de la BPCO", "concept": "Traitement BPCO", "type": "schema"},
+    {"file": "source_17_p11.png", "partie": 1, "sp": 4, "desc": "Antibiothérapie des exacerbations de BPCO", "concept": "ATB exacerbation BPCO", "type": "schema"},
+    # III. Sémiologie et urgences
+    {"file": "source_19_p13.png", "partie": 2, "sp": 0, "desc": "Algorithme d'orientation devant une douleur thoracique", "concept": "Douleur thoracique", "type": "schema"},
+    {"file": "source_20_p16.png", "partie": 2, "sp": 1, "desc": "Orientation diagnostique devant une dyspnée chronique", "concept": "Dyspnée chronique", "type": "schema"},
+    {"file": "source_21_p16.png", "partie": 2, "sp": 1, "desc": "Orientation diagnostique devant une dyspnée aiguë", "concept": "Dyspnée aiguë", "type": "schema"},
+    {"file": "source_42_p27.png", "partie": 2, "sp": 0, "desc": "Score de Wells et Score de Genève révisé", "concept": "Probabilité clinique EP", "type": "tableau"},
+    {"file": "source_45_p28.png", "partie": 2, "sp": 0, "desc": "Algorithme diagnostique de l'embolie pulmonaire", "concept": "Diagnostic EP", "type": "schema"},
+    {"file": "source_50_p30.png", "partie": 2, "sp": 0, "desc": "Stratification du risque de l'EP (PESI/sPESI)", "concept": "Stratification risque EP", "type": "schema"},
+    # IV. Épanchement pleural et pneumothorax
+    {"file": "source_22_p17.png", "partie": 3, "sp": 0, "desc": "Radiographie : épanchement pleural gauche", "concept": "Épanchement pleural imagerie", "type": "imagerie"},
+    {"file": "source_26_p21.png", "partie": 3, "sp": 1, "desc": "Radiographie et TDM de pneumothorax", "concept": "Pneumothorax imagerie", "type": "imagerie"},
+    # V. Imagerie et EFR
+    {"file": "source_28_p24.png", "partie": 4, "sp": 0, "desc": "Arcs pulmonaires : repères radiographiques de face", "concept": "Anatomie radiologique thorax", "type": "imagerie"},
+    {"file": "source_29_p24.png", "partie": 4, "sp": 0, "desc": "Cliché thoracique de profil annoté", "concept": "Radio thorax profil", "type": "imagerie"},
+    {"file": "source_33_p25.png", "partie": 4, "sp": 0, "desc": "Bronchogramme aérique : schéma", "concept": "Syndrome alvéolaire", "type": "schema"},
+    {"file": "source_27_p22.png", "partie": 4, "sp": 1, "desc": "Algorithme diagnostique devant une hypoxémie (EFR)", "concept": "Hypoxémie EFR", "type": "schema"},
+    # VI. Pathologies spécifiques
+    {"file": "source_52_p33.png", "partie": 5, "sp": 0, "desc": "Échelle de somnolence d'Epworth", "concept": "SAOS évaluation", "type": "tableau"},
+    {"file": "source_53_p34.png", "partie": 5, "sp": 0, "desc": "Algorithme diagnostique du SAOS", "concept": "Diagnostic SAOS", "type": "schema"},
+    {"file": "source_54_p37.png", "partie": 5, "sp": 1, "desc": "Statut tabagique en France (2016-2017)", "concept": "Épidémiologie tabagisme", "type": "schema"},
+    {"file": "source_55_p38.png", "partie": 5, "sp": 1, "desc": "Test de Fagerström simplifié (2 questions)", "concept": "Dépendance nicotinique", "type": "tableau"},
+    {"file": "source_59_p41.png", "partie": 5, "sp": 2, "desc": "Orientation diagnostique de la toux chez l'enfant", "concept": "Toux enfant", "type": "tableau"},
+    {"file": "source_60_p42.png", "partie": 5, "sp": 2, "desc": "Algorithme de prise en charge de la toux chronique", "concept": "Toux chronique", "type": "schema"},
+    {"file": "source_62_p44.png", "partie": 5, "sp": 2, "desc": "Histoire naturelle de la tuberculose (BK)", "concept": "Tuberculose", "type": "schema"},
+    {"file": "source_66_p45.png", "partie": 5, "sp": 2, "desc": "Tuberculose : radiographie et TDM thoracique", "concept": "Tuberculose imagerie", "type": "imagerie"},
+]
+
+
+def _place_source_images(fiche: FicheData, figures_dir: Path) -> None:
+    """Place les images sélectionnées du cours source dans les sous-parties."""
+    all_images: list[AnalyzedImage] = []
+    for i, entry in enumerate(_SOURCE_IMAGES):
+        path = figures_dir / entry["file"]
+        if not path.exists():
+            print(f"  [SKIP] {entry['file']} not found")
+            continue
+        img = _make_analyzed_image(
+            path, entry["desc"], entry["concept"],
+            entry["desc"], fig_num=i + 1, img_type=entry.get("type", "schema"),
+        )
+        all_images.append(img)
+        pi, si = entry["partie"], entry["sp"]
+        if pi < len(fiche.parties) and si < len(fiche.parties[pi].sous_parties):
+            fiche.parties[pi].sous_parties[si].images.append(img)
+    fiche.images = all_images
+
+
 def main():
     output_dir = PROJECT_ROOT / "output"
     output_dir.mkdir(exist_ok=True)
+    figures_dir = output_dir / "figures"
+    figures_dir.mkdir(exist_ok=True)
 
     fiche = build_pneumologie_fiche()
+
+    print("Placing source images from course PDF...")
+    _place_source_images(fiche, figures_dir)
+    print(f"  {len(fiche.images)} source images placed")
 
     docx_path = output_dir / "Pneumologie_Pneumologie_2025-2026.docx"
     print(f"Generating DOCX: {docx_path}")
@@ -835,7 +918,7 @@ def main():
         render_pdf(fiche, pdf_path)
         print(f"PDF generated: {pdf_path}")
     except Exception as e:
-        print(f"PDF generation skipped (WeasyPrint not available): {e}")
+        print(f"PDF generation skipped: {e}")
 
 
 if __name__ == "__main__":

@@ -85,8 +85,8 @@ class LegendEntry:
 # Marqueurs insérés par l'IA dans le contenu et expliqués sur la page de garde.
 # ★ est imposé (notion déjà tombée) ; ◆ et ⚠ sont deux propositions à évaluer.
 FICHE_LEGEND: tuple[LegendEntry, ...] = (
-    LegendEntry("★", "Déjà tombé aux ECN",
-                "Notion déjà posée lors d'une épreuve classante nationale."),
+    LegendEntry("★", "Déjà tombé aux EVC",
+                "Notion déjà posée lors d'une Épreuve de Vérification des Connaissances."),
     LegendEntry("◆", "Notion à haut rendement",
                 "Point à fort enjeu, statistiquement très rentable — à maîtriser en priorité."),
     LegendEntry("⚠", "Piège classique",

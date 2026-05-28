@@ -37,6 +37,12 @@ RGB_PEARL = RGBColor(0x8E, 0x99, 0xA8)
 RGB_KEYWORD = RGBColor(0x8C, 0x2F, 0x39)
 RGB_WHITE = RGBColor(0xFF, 0xFF, 0xFF)
 
+# Couleurs additionnelles (parité PDF)
+NAVY_DEEP = "131F33"      # Cover band: PDF --navy-deep
+GOLD_DARK = "8A6D2E"      # Chiffres-clés header, label mnémo
+LINE_COLOR = "D3D9E2"     # Subtle rule color (--line in CSS)
+RGB_GOLD_DARK = RGBColor(0x8A, 0x6D, 0x2E)
+
 FONT_TITLE = "Playfair Display"
 FONT_SOFT = "Cormorant Garamond"
 FONT_BODY = "Inter"
@@ -142,6 +148,47 @@ def _set_cell_borders(cell, color: str, sz: int = 4, left_accent: int | None = N
     cell._tc.get_or_add_tcPr().insert_element_before(borders, *_TCPR_AFTER_BORDERS)
 
 
+_TCPR_AFTER_TCMAR = ("w:textDirection", "w:tcFitText", "w:vAlign",
+                     "w:hideMark", "w:tcPrChange")
+
+_PPR_AFTER_SPACING = ("w:ind", "w:contextualSpacing", "w:jc", "w:rPr",
+                      "w:sectPr", "w:pPrChange")
+
+
+def _set_cell_margins(cell, *, top: int = 0, bottom: int = 0,
+                      left: int = 0, right: int = 0) -> None:
+    """Définit les marges internes d'une cellule (valeurs en twips).
+
+    python-docx n'expose pas les marges de cellule ; on injecte le XML brut
+    ``w:tcMar`` avec les sous-éléments ``w:top``, ``w:bottom``, ``w:left``,
+    ``w:right``.
+    """
+    tcPr = cell._tc.get_or_add_tcPr()
+    # Supprime un éventuel tcMar existant.
+    existing = tcPr.find(qn("w:tcMar"))
+    if existing is not None:
+        tcPr.remove(existing)
+    tcMar = OxmlElement("w:tcMar")
+    for side, value in (("w:top", top), ("w:bottom", bottom),
+                        ("w:left", left), ("w:right", right)):
+        el = OxmlElement(side)
+        el.set(qn("w:w"), str(value))
+        el.set(qn("w:type"), "dxa")
+        tcMar.append(el)
+    tcPr.insert_element_before(tcMar, *_TCPR_AFTER_TCMAR)
+
+
+def _set_line_spacing(paragraph, multiplier: float) -> None:
+    """Applique un interligne proportionnel (ex. 1.3 = 130 % de la taille)."""
+    pPr = paragraph._p.get_or_add_pPr()
+    spacing = pPr.find(qn("w:spacing"))
+    if spacing is None:
+        spacing = OxmlElement("w:spacing")
+        pPr.insert_element_before(spacing, *_PPR_AFTER_SPACING)
+    spacing.set(qn("w:line"), str(int(multiplier * 240)))
+    spacing.set(qn("w:lineRule"), "auto")
+
+
 def _repeat_table_header(row) -> None:
     """Marque une ligne comme en-tête répété sur chaque page (tableau multi-pages)."""
     trPr = row._tr.get_or_add_trPr()
@@ -167,7 +214,18 @@ def _set_char_spacing(run, twips: int) -> None:
     rPr.insert_element_before(spacing, *_RPR_AFTER_SPACING)
 
 
-def _add_field(paragraph, field_code: str, color: RGBColor) -> None:
+def _shade_run(run, hex_color: str) -> None:
+    """Applique un fond (shading) à un run individuel."""
+    rPr = run._r.get_or_add_rPr()
+    shd = OxmlElement("w:shd")
+    shd.set(qn("w:val"), "clear")
+    shd.set(qn("w:color"), "auto")
+    shd.set(qn("w:fill"), hex_color)
+    rPr.append(shd)
+
+
+def _add_field(paragraph, field_code: str, color: RGBColor, *,
+               bg: str | None = None) -> None:
     """Insère un champ Word (PAGE, NUMPAGES…) dans un paragraphe."""
     run = paragraph.add_run()
     begin = OxmlElement("w:fldChar")
@@ -184,23 +242,26 @@ def _add_field(paragraph, field_code: str, color: RGBColor) -> None:
     run.font.size = Pt(8.5)
     run.bold = True
     run.font.color.rgb = color
+    if bg:
+        _shade_run(run, bg)
 
 
 def _add_page_number(paragraph) -> None:
-    """Insère la pagination « page / total » dans un paragraphe."""
-    _add_field(paragraph, "PAGE", RGB_NAVY)
+    """Insère la pagination « page / total » (pill navy, texte blanc)."""
+    _add_field(paragraph, "PAGE", RGB_WHITE, bg=NAVY)
     sep = paragraph.add_run("  /  ")
     sep.font.name = FONT_BODY
     sep.font.size = Pt(8.5)
     sep.bold = True
-    sep.font.color.rgb = RGB_NAVY
-    _add_field(paragraph, "NUMPAGES", RGB_NAVY)
+    sep.font.color.rgb = RGB_WHITE
+    _shade_run(sep, NAVY)
+    _add_field(paragraph, "NUMPAGES", RGB_WHITE, bg=NAVY)
 
 
 # ── Parsing Markdown inline ───────────────────────────────────────────────────
 # Couleurs des marqueurs de légende (★ ◆ ⚠).
 _MARKER_COLORS: dict[str, RGBColor] = {
-    "★": RGB_GOLD,      # ★ — déjà tombé aux ECN
+    "★": RGB_GOLD,      # ★ — déjà tombé aux EVC
     "◆": RGB_NAVY,      # ◆ — haut rendement
     "⚠": RGB_BURGUNDY,  # ⚠ — piège classique
 }
@@ -268,7 +329,7 @@ class DocxFicheWriter:
         section.page_width = Mm(210)
         section.page_height = Mm(297)
         section.top_margin = Mm(24)
-        section.bottom_margin = Mm(22)
+        section.bottom_margin = Mm(20)
         section.left_margin = Mm(18)
         section.right_margin = Mm(18)
         section.different_first_page_header_footer = True
@@ -278,7 +339,6 @@ class DocxFicheWriter:
         normal.font.size = Pt(10.4)
         normal.font.color.rgb = RGB_ANTHRACITE
         normal.paragraph_format.space_after = Pt(3)
-        normal.paragraph_format.line_spacing = 1.5
 
     def _configure_header_footer(self, fiche: FicheData) -> None:
         """Configure l'en-tête (cours) et le pied de page (mention + pagination)."""
@@ -309,11 +369,7 @@ class DocxFicheWriter:
         _add_page_number(footer_par)
 
     def _add_watermark(self) -> None:
-        """Filigrane : logo gris pâle centré, répété sur chaque page.
-
-        Ajouté à l'en-tête par défaut (donc absent de la page de garde, qui
-        a son propre en-tête) sous forme de forme VML flottante.
-        """
+        """Filigrane : logo gris pâle centré, répété sur chaque page via VML."""
         if not WATERMARK_PATH.exists():
             return
         header = self.doc.sections[0].header
@@ -323,6 +379,7 @@ class DocxFicheWriter:
         xml = (
             '<w:r '
             'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" '
+            'xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" '
             'xmlns:v="urn:schemas-microsoft-com:vml" '
             'xmlns:o="urn:schemas-microsoft-com:office:office" '
             'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/'
@@ -347,17 +404,18 @@ class DocxFicheWriter:
             '<v:shape id="MajorEcnWatermark" o:spid="_x0000_s2051" '
             'type="#_x0000_t75" o:allowincell="f" '
             'style="position:absolute;margin-left:0;margin-top:0;'
-            'width:{w:.1f}pt;height:{h:.1f}pt;z-index:251659264;'
+            'width:{w:.1f}pt;height:{h:.1f}pt;z-index:-251657216;'
             'mso-position-horizontal:center;'
-            'mso-position-horizontal-relative:page;'
+            'mso-position-horizontal-relative:margin;'
             'mso-position-vertical:center;'
-            'mso-position-vertical-relative:page">'
-            '<v:imagedata r:id="{rid}" o:title="Major ECN"/>'
+            'mso-position-vertical-relative:margin">'
+            '<v:imagedata r:id="{rid}" o:title="Major ECN" gain="19661f" blacklevel="22938f"/>'
             '</v:shape>'
             '</w:pict>'
             '</w:r>'
         ).format(w=width_pt, h=height_pt, rid=rId)
-        header.paragraphs[0]._p.append(parse_xml(xml))
+        wm_par = header.add_paragraph()
+        wm_par._p.append(parse_xml(xml))
 
     # -- Assemblage ------------------------------------------------------------
     def build(self, fiche: FicheData, logo_path: Path | None) -> Document:
@@ -381,13 +439,13 @@ class DocxFicheWriter:
         _clear_table_borders(table)
 
         row = table.rows[0]
-        row.height = Mm(252)
+        row.height = Mm(297)
         row.height_rule = WD_ROW_HEIGHT_RULE.AT_LEAST
 
         band, content = row.cells[0], row.cells[1]
         band.width = Mm(13)
         content.width = Mm(CONTENT_WIDTH_MM - 13)
-        _shade_cell(band, NAVY)
+        _shade_cell(band, NAVY_DEEP)
         content.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
 
         # Logo en haut à droite.
@@ -396,7 +454,7 @@ class DocxFicheWriter:
         logo_par.paragraph_format.space_after = Pt(8)
         if logo_path is not None and logo_path.exists():
             try:
-                logo_par.add_run().add_picture(str(logo_path), width=Mm(42))
+                logo_par.add_run().add_picture(str(logo_path), width=Mm(43))
             except Exception:  # noqa: BLE001 — image illisible
                 self._cover_placeholder(logo_par)
         else:
@@ -423,7 +481,7 @@ class DocxFicheWriter:
 
         # Année universitaire.
         year_par = content.add_paragraph()
-        year_par.paragraph_format.space_before = Pt(6)
+        year_par.paragraph_format.space_before = Pt(13)
         year_run = year_par.add_run(f"Année {fiche.annee}")
         year_run.font.name = FONT_SOFT
         year_run.font.size = Pt(15)
@@ -474,7 +532,7 @@ class DocxFicheWriter:
 
     def _cover_legend(self, cell) -> None:
         """Légende des marqueurs, en bas de la page de garde."""
-        self._cover_label(cell, "Légende", space_before=26)
+        self._cover_label(cell, "Légende", space_before=65)
         for entry in FICHE_LEGEND:
             row = cell.add_paragraph()
             row.paragraph_format.space_before = Pt(3)
@@ -510,7 +568,6 @@ class DocxFicheWriter:
     def _build_partie(self, partie) -> None:
         for sous in partie.sous_parties:
             self._build_souspartie_table(partie.numero, partie.titre, sous)
-        self.doc.add_page_break()
 
     def _banner(self, text: str) -> None:
         paragraph = self.doc.add_paragraph()
@@ -554,18 +611,23 @@ class DocxFicheWriter:
         banner_cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
         _shade_cell(banner_cell, NAVY)
         _set_cell_borders(banner_cell, NAVY, sz=4)
+        _set_cell_margins(banner_cell, top=261, bottom=261, left=397, right=397)
         banner_par = banner_cell.paragraphs[0]
-        banner_par.paragraph_format.space_before = Pt(3)
-        banner_par.paragraph_format.space_after = Pt(3)
-        num_run = banner_par.add_run(f"{numero}  ")
+        banner_par.paragraph_format.space_before = Pt(0)
+        banner_par.paragraph_format.space_after = Pt(0)
+        num_run = banner_par.add_run(f"{numero}")
         num_run.font.name = FONT_TITLE
         num_run.bold = True
-        num_run.font.size = Pt(15)
+        num_run.font.size = Pt(21)
         num_run.font.color.rgb = RGB_GOLD
+        sep_run = banner_par.add_run("  |  ")
+        sep_run.font.name = FONT_TITLE
+        sep_run.font.size = Pt(17)
+        sep_run.font.color.rgb = RGBColor(0x80, 0x90, 0xA8)
         banner_title_run = banner_par.add_run(titre)
         banner_title_run.font.name = FONT_TITLE
         banner_title_run.bold = True
-        banner_title_run.font.size = Pt(14)
+        banner_title_run.font.size = Pt(17)
         banner_title_run.font.color.rgb = RGB_WHITE
         _repeat_table_header(table.rows[0])
 
@@ -573,6 +635,8 @@ class DocxFicheWriter:
         tag_cell, title_cell = table.rows[1].cells
         _shade_cell(tag_cell, NAVY)
         _shade_cell(title_cell, SUBTITLE_BG)
+        _set_cell_borders(tag_cell, NAVY, sz=4)
+        _set_cell_borders(title_cell, PEARL, sz=4)
         tag_cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
         title_cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
         tag_cell.width = concept_width
@@ -585,7 +649,7 @@ class DocxFicheWriter:
         tag_run.font.name = FONT_SOFT
         tag_run.italic = True
         tag_run.bold = True
-        tag_run.font.size = Pt(13)
+        tag_run.font.size = Pt(12)
         tag_run.font.color.rgb = RGB_WHITE
 
         title_par = title_cell.paragraphs[0]
@@ -604,11 +668,15 @@ class DocxFicheWriter:
                 concept_cell.width = concept_width
                 detail_cell.width = detail_width
                 _shade_cell(concept_cell, MIST)
+                _set_cell_borders(concept_cell, PEARL, sz=4)
+                _set_cell_borders(detail_cell, PEARL, sz=4)
+                _set_cell_margins(concept_cell, top=159, bottom=159, left=170, right=170)
+                _set_cell_margins(detail_cell, top=136, bottom=136, left=227, right=227)
                 concept_cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
                 detail_cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
                 concept_par = concept_cell.paragraphs[0]
                 concept_par.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                _add_inline_runs(concept_par, row.concept, size=9.7, bold=True,
+                _add_inline_runs(concept_par, row.concept, size=10, bold=True,
                                  keyword_color=False)
                 self._fill_detail_cell(detail_cell, row.detail_md)
                 target_cell = detail_cell
@@ -651,18 +719,40 @@ class DocxFicheWriter:
         if len(paragraphs) > 1 and not paragraphs[0].runs:
             element = paragraphs[0]._element
             element.getparent().remove(element)
+        # Interligne 1.3 (parité avec le CSS line-height du PDF).
+        for p in cell.paragraphs:
+            _set_line_spacing(p, 1.3)
 
     # -- 4. Synthèse & chiffres-clés -------------------------------------------
     def _build_synthese(self, fiche: FicheData) -> None:
-        self._banner("Synthèse — Tableaux de révision")
+        # Bannière synthèse — table 1×1 navy (parité avec les bannières partie).
+        btbl = self.doc.add_table(rows=1, cols=1)
+        btbl.alignment = WD_TABLE_ALIGNMENT.CENTER
+        btbl.autofit = False
+        _clear_table_borders(btbl)
+        bcell = btbl.rows[0].cells[0]
+        bcell.width = Mm(CONTENT_WIDTH_MM)
+        _shade_cell(bcell, NAVY)
+        _set_cell_borders(bcell, NAVY, sz=4)
+        _set_cell_margins(bcell, top=261, bottom=261, left=397, right=397)
+        bpar = bcell.paragraphs[0]
+        bpar.paragraph_format.space_before = Pt(0)
+        bpar.paragraph_format.space_after = Pt(0)
+        brun = bpar.add_run("Synthèse — Tableaux de révision")
+        brun.font.name = FONT_TITLE
+        brun.bold = True
+        brun.font.size = Pt(17)
+        brun.font.color.rgb = RGB_WHITE
+
         if fiche.chiffres_cles is not None:
             self._synthese_block("Chiffres-clés à connaître",
-                                  fiche.chiffres_cles.markdown)
+                                  fiche.chiffres_cles.markdown,
+                                  chiffres_cles=True)
         for tableau in fiche.tableaux:
             self._synthese_block(tableau.titre, tableau.markdown)
-        self.doc.add_page_break()
 
-    def _synthese_block(self, titre: str, markdown: str) -> None:
+    def _synthese_block(self, titre: str, markdown: str, *,
+                        chiffres_cles: bool = False) -> None:
         heading = self.doc.add_paragraph()
         heading.paragraph_format.space_before = Pt(8)
         run = heading.add_run(titre)
@@ -670,7 +760,8 @@ class DocxFicheWriter:
         run.bold = True
         run.font.size = Pt(13)
         run.font.color.rgb = RGB_NAVY
-        self._render_markdown(markdown, synthese=True)
+        self._render_markdown(markdown, synthese=True,
+                              chiffres_cles=chiffres_cles)
 
     # -- 5. Fiche éclair -------------------------------------------------------
     def _build_eclair(self, fiche: FicheData, logo_path: Path | None) -> None:
@@ -718,18 +809,20 @@ class DocxFicheWriter:
         rule.alignment = WD_ALIGN_PARAGRAPH.CENTER
         rule.paragraph_format.space_before = Pt(4)
         rule.paragraph_format.space_after = Pt(6)
-        rule_run = rule.add_run("━━━━━━━━━━━━━")
-        rule_run.font.size = Pt(6)
-        rule_run.font.color.rgb = RGB_GOLD
+        # Filet décoratif gold 38mm centré (bordure basse sur paragraphe vide).
+        rule.paragraph_format.left_indent = Mm(68)
+        rule.paragraph_format.right_indent = Mm(68)
+        _set_paragraph_borders(rule, bottom={"sz": 6, "color": GOLD, "space": 2})
 
         if fiche.fiche_eclair_md:
-            self._render_markdown(fiche.fiche_eclair_md, container=cell)
+            self._render_markdown(fiche.fiche_eclair_md, container=cell,
+                                  font_size=9.3)
 
         if fiche.points_cles:
             pts_title = cell.add_paragraph()
-            pts_title.paragraph_format.space_before = Pt(6)
-            pts_title.paragraph_format.space_after = Pt(3)
-            pts_run = pts_title.add_run("À retenir absolument")
+            pts_title.paragraph_format.space_before = Pt(4)
+            pts_title.paragraph_format.space_after = Pt(2)
+            pts_run = pts_title.add_run("Points à retenir absolument")
             pts_run.font.name = FONT_SOFT
             pts_run.bold = True
             pts_run.font.size = Pt(11.5)
@@ -737,12 +830,12 @@ class DocxFicheWriter:
             _set_paragraph_borders(pts_title, bottom={"sz": 4, "color": GOLD, "space": 2})
             for point in fiche.points_cles:
                 paragraph = cell.add_paragraph()
-                paragraph.paragraph_format.space_after = Pt(3)
-                paragraph.paragraph_format.left_indent = Mm(5)
+                paragraph.paragraph_format.space_after = Pt(1.5)
+                paragraph.paragraph_format.left_indent = Mm(4)
                 bullet_run = paragraph.add_run("•  ")
                 bullet_run.font.color.rgb = RGB_NAVY
-                bullet_run.font.size = Pt(9.3)
-                _add_inline_runs(paragraph, point, size=9.3)
+                bullet_run.font.size = Pt(8.8)
+                _add_inline_runs(paragraph, point, size=8.8)
 
         footer = cell.add_paragraph()
         footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -789,7 +882,8 @@ class DocxFicheWriter:
 
     # -- Convertisseur Markdown → Word -----------------------------------------
     def _render_markdown(self, markdown: str, *, container=None,
-                         synthese: bool = False, font_size: float = 9.7) -> None:
+                         synthese: bool = False, font_size: float = 9.7,
+                         chiffres_cles: bool = False) -> None:
         """Convertit un bloc Markdown en paragraphes et tableaux Word.
 
         `container` est le réceptacle (document ou cellule de tableau).
@@ -812,7 +906,8 @@ class DocxFicheWriter:
                 while index < len(lines) and lines[index].strip().startswith("|"):
                     block.append(lines[index])
                     index += 1
-                self._add_md_table(block, synthese, target)
+                self._add_md_table(block, synthese, target,
+                                   chiffres_cles=chiffres_cles)
                 continue
 
             # Titre Markdown.
@@ -848,13 +943,16 @@ class DocxFicheWriter:
 
     def _add_bullet(self, text: str, level: int, container,
                     font_size: float = 9.7) -> None:
-        style = ("List Bullet", "List Bullet 2", "List Bullet 3")[level]
-        try:
-            paragraph = container.add_paragraph(style=style)
-        except KeyError:  # pragma: no cover — style absent du modèle
-            paragraph = container.add_paragraph(style="List Bullet")
-            paragraph.paragraph_format.left_indent = Mm(6 + 6 * level)
+        """Puce colorée manuelle (navy L0, gold L1, pearl L2)."""
+        _BULLET_MARKERS = ("•", "◦", "–")
+        _BULLET_COLORS = (RGB_NAVY, RGB_GOLD, RGB_PEARL)
+        paragraph = container.add_paragraph()
+        paragraph.paragraph_format.left_indent = Mm(2 + 5 * level)
+        paragraph.paragraph_format.first_line_indent = Mm(-3)
         paragraph.paragraph_format.space_after = Pt(2)
+        marker_run = paragraph.add_run(f"{_BULLET_MARKERS[level]}  ")
+        marker_run.font.size = Pt(font_size)
+        marker_run.font.color.rgb = _BULLET_COLORS[level]
         _add_inline_runs(paragraph, text, size=font_size)
 
     def _add_content_heading(self, text: str, container) -> None:
@@ -866,7 +964,8 @@ class DocxFicheWriter:
             keyword_color=False, font=FONT_SOFT,
         )
 
-    def _add_md_table(self, block: list[str], synthese: bool, container) -> None:
+    def _add_md_table(self, block: list[str], synthese: bool, container,
+                      *, chiffres_cles: bool = False) -> None:
         rows = [_split_table_row(line) for line in block]
         if len(rows) < 2:
             return
@@ -881,12 +980,14 @@ class DocxFicheWriter:
         table.autofit = True
         _set_table_borders(table, PEARL, sz=4)
 
+        # Chiffres-clés → header gold-dark, sinon navy/mist.
+        hdr_fill = GOLD_DARK if chiffres_cles else (NAVY if synthese else MIST)
         header_cells = table.rows[0].cells
         for col in range(columns):
             cell = header_cells[col]
-            _shade_cell(cell, NAVY if synthese else MIST)
+            _shade_cell(cell, hdr_fill)
             self._fill_cell(cell, header[col] if col < len(header) else "",
-                            bold=True, white=synthese)
+                            bold=True, white=synthese or chiffres_cles)
 
         for row_index, row in enumerate(body):
             cells = table.add_row().cells
@@ -910,7 +1011,7 @@ class DocxFicheWriter:
         color = RGB_WHITE if white else RGB_ANTHRACITE
         _add_inline_runs(
             paragraph, text.replace("<br>", " ").strip(),
-            size=9.3, color=color, bold=bold, keyword_color=not white,
+            size=9, color=color, bold=bold, keyword_color=not white,
         )
 
 

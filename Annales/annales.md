@@ -4,7 +4,7 @@
 
 Le dossier `Annales/` contient les sujets des **Épreuves de Vérification des Connaissances (EVC)** utilisés pour les ECN. Ces annales servent deux objectifs dans le générateur de fiches :
 
-1. **Placement des marqueurs ★** : identifier les notions déjà tombées aux ECN
+1. **Placement des marqueurs ★** : identifier les notions déjà tombées aux EVC
 2. **Priorisation du contenu** : focaliser les fiches sur les points clés susceptibles de tomber
 
 ## Types d'épreuves
@@ -146,7 +146,7 @@ Les PDF regroupent toutes les spécialités d'une année en un seul fichier. Les
 
 ## Règles d'utilisation pour le générateur
 
-### Placement des ★ (déjà tombé aux ECN)
+### Placement des ★ (déjà tombé aux EVC)
 - Parcourir tous les fichiers `.38.DOC` (EVCF + EVCP) pour la pneumologie
 - Identifier les notions, pathologies, médicaments, valeurs seuils questionnés
 - Placer le marqueur ★ devant chaque notion retrouvée dans les annales
