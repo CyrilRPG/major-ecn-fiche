@@ -60,14 +60,16 @@
         <tr>
           <td class="ft-concept">{{ row.concept | md_inline }}</td>
           <td class="ft-detail content">
+            {% if loop.index0 == ns.target %}
+              {# Petites figures d'abord : flottées à droite, le texte les habille. #}
+              {% for img in sp.images %}{% set uri = img.saved_path | file_uri %}
+              {% if uri and not (img | is_large_fig) %}<figure class="ft-figure ft-figure--small"><img src="{{ uri }}" alt="{{ img.description }}" /></figure>{% endif %}{% endfor %}
+            {% endif %}
             {{ row.detail_md | md }}
             {% if loop.index0 == ns.target %}
+              {# Grandes figures (incl. arbres/tableaux) : pleine largeur, sous le texte. #}
               {% for img in sp.images %}{% set uri = img.saved_path | file_uri %}
-              {% if uri %}<figure class="ft-figure">
-                <img src="{{ uri }}" alt="{{ img.description }}" />
-                <figcaption>Figure&nbsp;{{ img.figure_number }} —
-                  {{ img.description }}</figcaption>
-              </figure>{% endif %}{% endfor %}
+              {% if uri and (img | is_large_fig) %}<figure class="ft-figure ft-figure--large"><img src="{{ uri }}" alt="{{ img.description }}" /></figure>{% endif %}{% endfor %}
             {% endif %}
           </td>
         </tr>
@@ -75,14 +77,14 @@
         <tr class="ft-reflexe ft-reflexe--{{ row.kind }}">
           <td colspan="2">
             <span class="ft-reflexe-label">{{ reflexe_labels.get(row.kind, '') }}</span>
+            {% if loop.index0 == ns.target %}
+              {% for img in sp.images %}{% set uri = img.saved_path | file_uri %}
+              {% if uri and not (img | is_large_fig) %}<figure class="ft-figure ft-figure--small"><img src="{{ uri }}" alt="{{ img.description }}" /></figure>{% endif %}{% endfor %}
+            {% endif %}
             <span class="ft-reflexe-body content">{{ row.detail_md | md }}</span>
             {% if loop.index0 == ns.target %}
               {% for img in sp.images %}{% set uri = img.saved_path | file_uri %}
-              {% if uri %}<figure class="ft-figure">
-                <img src="{{ uri }}" alt="{{ img.description }}" />
-                <figcaption>Figure&nbsp;{{ img.figure_number }} —
-                  {{ img.description }}</figcaption>
-              </figure>{% endif %}{% endfor %}
+              {% if uri and (img | is_large_fig) %}<figure class="ft-figure ft-figure--large"><img src="{{ uri }}" alt="{{ img.description }}" /></figure>{% endif %}{% endfor %}
             {% endif %}
           </td>
         </tr>

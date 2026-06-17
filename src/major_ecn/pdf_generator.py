@@ -139,10 +139,34 @@ def render_pdf(fiche: FicheData, output_path: Path) -> Path:
         file_url = tmp_html.resolve().as_uri()
 
         pw = sync_playwright().start()
-        browser = pw.chromium.launch()
+        # Permet d'utiliser un binaire Chromium pré-installé (sandbox sans accès
+        # au CDN Playwright) via PLAYWRIGHT_CHROMIUM_EXECUTABLE.
+        import os
+        exe = os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE", "").strip()
+        launch_kwargs = {"executable_path": exe} if exe else {}
+        browser = pw.chromium.launch(**launch_kwargs)
         page = browser.new_page()
         page.goto(file_url, wait_until="networkidle")
         page.wait_for_timeout(1500)
+
+        # La fiche éclair doit tenir sur UNE seule page : on la réduit via `zoom`
+        # (qui, contrairement à `transform`, réduit aussi la hauteur de mise en
+        # page) si son contenu dépasse la hauteur utile d'une page A4.
+        page.evaluate(
+            """(args) => {
+              const [topMm, bottomMm] = args;
+              const mmToPx = (mm) => (mm * 96) / 25.4;
+              const avail = mmToPx(297 - topMm - bottomMm) - 4;
+              document.querySelectorAll('.eclair-card').forEach((card) => {
+                card.style.zoom = '1';
+                const h = card.getBoundingClientRect().height;
+                if (h > avail) {
+                  card.style.zoom = String(Math.max(0.5, avail / h));
+                }
+              });
+            }""",
+            [_TOP_MM, _BOTTOM_MM],
+        )
 
         navy = PALETTE.navy
         pearl = PALETTE.pearl

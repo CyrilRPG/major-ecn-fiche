@@ -106,6 +106,29 @@ def _file_uri(path: Path | str | None) -> str:
     return path.resolve().as_uri() if path.exists() else ""
 
 
+# Types d'images à toujours afficher en grand (pleine largeur) pour que le
+# texte interne reste lisible : arbres décisionnels, tableaux, algorithmes…
+_LARGE_IMG_TYPES = {
+    "tableau", "arbre", "arbre_decisionnel", "algorithme", "organigramme",
+    "schema_complexe", "graphique", "flowchart", "diagramme",
+}
+
+
+def _is_large_fig(img) -> bool:
+    """Vrai si la figure doit occuper toute la largeur (sinon flottée à droite).
+
+    Critère : grande en pixels (max dim ≥ 900 px) OU type « texte-lourd »
+    (arbre décisionnel, tableau, algorithme…) qui deviendrait illisible réduit.
+    """
+    try:
+        w = int(getattr(img.source, "width", 0) or 0)
+        h = int(getattr(img.source, "height", 0) or 0)
+    except Exception:
+        w = h = 0
+    kind = (getattr(img, "type", "") or "").strip().lower()
+    return w >= 900 or h >= 900 or kind in _LARGE_IMG_TYPES
+
+
 def _build_environment() -> Environment:
     """Construit l'environnement Jinja2 avec les filtres de la fiche."""
     env = Environment(
@@ -117,6 +140,7 @@ def _build_environment() -> Environment:
     env.filters["md"] = render_markdown
     env.filters["md_inline"] = render_markdown_inline
     env.filters["file_uri"] = _file_uri
+    env.filters["is_large_fig"] = _is_large_fig
     return env
 
 
