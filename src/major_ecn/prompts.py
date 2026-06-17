@@ -88,9 +88,20 @@ RÈGLES STRICTES :
 - Reste strictement fidèle au cours source — n'invente aucune donnée.
 
 MARQUEURS — insère ces symboles JUSTE AVANT le terme concerné :
-- ★ devant une notion déjà tombée aux EVC ;
+- ★ UNIQUEMENT devant une notion dont tu es CERTAIN qu'elle est tombée aux
+  EVC de MÉDECINE GÉNÉRALE (code 71). NE METS PAS de ★ en cas de doute.
+  Ne te base PAS sur les annales de la spécialité elle-même.
+  Vise 5 à 15 ★ maximum par partie — sois très sélectif.
 - ◆ devant une notion à haut rendement (à maîtriser en priorité) ;
 - ⚠ devant un piège classique ou une erreur fréquente.
+
+ENRICHISSEMENT PÉDAGOGIQUE — en plus des lignes standard, insère :
+- Des SOUS-TABLEAUX COMPARATIFS Markdown (| col1 | col2 |) pour comparer
+  diagnostics différentiels, traitements, classifications, etc.
+- Des ARBRES DÉCISIONNELS sous forme de puces imbriquées avec flèches (→)
+  pour les stratégies diagnostiques ou thérapeutiques.
+- Des encadrés [PIEGE] détaillés sur les erreurs classiques tombées aux EVC.
+- Des encadrés [RETENIR] avec les notions absolument incontournables.
 
 Ne produis QUE le contenu de la partie {numero}, au format ci-dessus, sans
 aucun texte d'introduction ni de conclusion.

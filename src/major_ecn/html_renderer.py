@@ -33,6 +33,29 @@ _MARKER_CLASSES = {"★": "m-ecn", "◆": "m-yield", "⚠": "m-trap"}
 _TABLE_ROW_RE = re.compile(r"^\s*\|.*\|\s*$")
 _TABLE_DELIM_RE = re.compile(r"^\s*\|(?:\s*:?-+:?\s*\|)+\s*$")
 
+# Détection d'une puce indentée : "  - texte" ou "    - texte"
+_BULLET_INDENT_RE = re.compile(r"^( +)([-*+]\s)")
+
+
+def _expand_list_indent(text: str) -> str:
+    """Convertit l'indentation 2-spaces en 4-spaces pour les listes imbriquées.
+
+    Python-Markdown (avec sane_lists) attend 4 espaces par niveau d'indentation.
+    Le contenu généré utilise 2 espaces par niveau (convention plus courante).
+    On double simplement le nombre d'espaces en tête d'une ligne de puce.
+    """
+    out_lines = []
+    for line in text.split("\n"):
+        m = _BULLET_INDENT_RE.match(line)
+        if m:
+            indent = m.group(1)
+            # Double le nombre d'espaces : 2→4, 4→8, etc.
+            new_indent = " " * (len(indent) * 2)
+            out_lines.append(new_indent + line[len(indent):])
+        else:
+            out_lines.append(line)
+    return "\n".join(out_lines)
+
 
 def _normalize_tables(text: str) -> str:
     """Isole les tableaux Markdown pour qu'ils soient toujours interprétés.
@@ -87,7 +110,9 @@ def render_markdown(text: str) -> Markup:
     if not text or not text.strip():
         return Markup("")
     converter = _markdown_converter()
-    return Markup(_highlight_markers(converter.convert(_normalize_tables(text))))
+    # Prétraitements : tableaux isolés + indentation 2→4 espaces pour listes
+    preprocessed = _expand_list_indent(_normalize_tables(text))
+    return Markup(_highlight_markers(converter.convert(preprocessed)))
 
 
 def render_markdown_inline(text: str) -> Markup:

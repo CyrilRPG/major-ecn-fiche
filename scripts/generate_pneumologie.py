@@ -57,7 +57,7 @@ def build_pneumologie_fiche() -> FicheData:
     # ── PARTIE I : ASTHME ──
     partie_i = Partie(numero="I", titre="Asthme", sous_parties=[
         SousPartie(lettre="A", titre="Généralités et physiopathologie", rows=[
-            FicheRow(concept="★ Épidémiologie", detail_md=(
+            FicheRow(concept="Épidémiologie", detail_md=(
                 "- **Prévalence** : adulte 5-7%, enfant 8%\n"
                 "- **Mortalité** : ~1 000 décès/an en France\n"
                 "- **FDR** : ATCD familiaux asthme, infections virales, sensibilisation aux pneumallergènes, "
@@ -78,14 +78,14 @@ def build_pneumologie_fiche() -> FicheData:
             )),
         ]),
         SousPartie(lettre="B", titre="Tableau clinique", rows=[
-            FicheRow(concept="★ Terrain", detail_md=(
+            FicheRow(concept="Terrain", detail_md=(
                 "- ATCD familiaux d'asthme\n"
                 "- ATCD personnels : **rhinite allergique**, rhino-sinusite chronique, **eczéma atopique**\n"
                 "- Souvent diagnostic antérieur de « bronchites à répétition »"
             )),
-            FicheRow(concept="★ Signes fonctionnels", detail_md=(
+            FicheRow(concept="Signes fonctionnels", detail_md=(
                 "- Oppression thoracique\n"
-                "- ★ **Sifflements expiratoires** transitoires\n"
+                "- **Sifflements expiratoires** transitoires\n"
                 "- Dyspnée\n"
                 "- Toux déclenchée par l'effort +/- sifflements\n"
                 "- Symptômes de durée brève (quelques minutes à 20 min), **paroxystiques** et **récidivants**\n"
@@ -101,9 +101,9 @@ def build_pneumologie_fiche() -> FicheData:
             )),
         ]),
         SousPartie(lettre="C", titre="Examens complémentaires et diagnostic", rows=[
-            FicheRow(concept="★ EFR — Spirométrie", detail_md=(
+            FicheRow(concept="EFR — Spirométrie", detail_md=(
                 "- Courbe débit-volume : aspect **concave** avec diminution de l'ensemble des débits\n"
-                "- ★ **Diagnostic positif** :\n"
+                "- **Diagnostic positif** :\n"
                 "  - **TVO** : VEMS/CVF < **0,7**\n"
                 "  - **Réversibilité significative** après BDCA ou corticothérapie systémique 2 semaines :\n"
                 "    - Augmentation VEMS > **200 mL** par rapport à la valeur initiale **ET**\n"
@@ -116,7 +116,7 @@ def build_pneumologie_fiche() -> FicheData:
                 "ou stimulation par air sec\n"
                 "- ⚠ Piège : ne pas confondre réversibilité significative et complète"
             )),
-            FicheRow(concept="DEP", detail_md=(
+            FicheRow(concept="★ DEP", detail_md=(
                 "- Débit maximal instantané mesuré lors d'une expiration forcée\n"
                 "- Moins fiable que le VEMS\n"
                 "- Utile : urgences, diagnostic asthme professionnel, auto-surveillance"
@@ -126,7 +126,7 @@ def build_pneumologie_fiche() -> FicheData:
                 "- Non recommandée pour le suivi\n"
                 "- But : éliminer les diagnostics différentiels"
             )),
-            FicheRow(concept="★ Bilan allergologique", detail_md=(
+            FicheRow(concept="Bilan allergologique", detail_md=(
                 "- **Indications** : bilan initial, contrôle non acquis malgré traitement\n"
                 "- Par **prick-tests** vis-à-vis des pneumallergènes\n"
                 "- Dosage IgE spécifiques si discordance clinique/prick-tests"
@@ -148,7 +148,7 @@ def build_pneumologie_fiche() -> FicheData:
                 "- **Vaccinations** : anti-grippale (tous asthmatiques), anti-pneumococcique si IRC\n"
                 "- Facteurs psychologiques, RGO (recherche systématique), obésité"
             )),
-            FicheRow(concept="★ Paliers thérapeutiques", detail_md=(
+            FicheRow(concept="Paliers thérapeutiques", detail_md=(
                 "| Palier | Traitement de fond | Traitement de crise |\n"
                 "|--------|-------------------|--------------------|\n"
                 "| 1 | Aucun | BDCA à la demande |\n"
@@ -177,7 +177,7 @@ def build_pneumologie_fiche() -> FicheData:
                 "  - Palier 4 → **persistant sévère**\n"
                 "  - Palier 5 → **asthme sévère**"
             )),
-            FicheRow(concept="★ Éducation thérapeutique", detail_md=(
+            FicheRow(concept="Éducation thérapeutique", detail_md=(
                 "- Plan d'action : reconnaissance exacerbation, modalités traitement, accès aux soins\n"
                 "- 4 étapes : diagnostic éducatif → contrat éducatif → activités éducatives → évaluation\n"
                 "- Processus continu, réactualisé régulièrement\n"
@@ -189,7 +189,7 @@ def build_pneumologie_fiche() -> FicheData:
                 "- **Exacerbation** : augmentation progressive des symptômes sans retour à la normale "
                 "et diminution progressive de la fonction respiratoire"
             )),
-            FicheRow(concept="★ FDR exacerbation", detail_md=(
+            FicheRow(concept="FDR exacerbation", detail_md=(
                 "- Symptômes non contrôlés\n"
                 "- Absence de CSI (non-prescription, non-observance, mauvaise technique)\n"
                 "- ⚠ Utilisation excessive BDCA : > **1 flacon/mois**\n"
@@ -232,18 +232,18 @@ def build_pneumologie_fiche() -> FicheData:
                 "- Corticoïdes **IV** : 0,5-1 mg/kg/j (max **80 mg/j**)\n"
                 "- Ventilation mécanique si signes de gravité extrême"
             )),
-            FicheRow(concept="", detail_md=(
+            FicheRow(concept="★", detail_md=(
                 "- **Critères de gravité extrême** : cyanose, respiration paradoxale, pauses respiratoires, "
                 "silence auscultatoire, bradycardie, collapsus, troubles de conscience"
             ), kind="piege"),
         ]),
         SousPartie(lettre="F", titre="Asthme de l'enfant < 36 mois", rows=[
-            FicheRow(concept="Définition", detail_md=(
+            FicheRow(concept="★ Définition", detail_md=(
                 "- Tout épisode dyspnéique avec râles sibilants, produit **au moins 3 fois** depuis la naissance\n"
                 "- Diagnostic positif : symptômes récidivants à prédominance nocturne, normalité RXT, "
                 "efficacité du traitement antiasthmatique, signes d'atopie personnels/familiaux"
             )),
-            FicheRow(concept="★ FDR décès par asthme", detail_md=(
+            FicheRow(concept="FDR décès par asthme", detail_md=(
                 "- ATCD d'exacerbation sévère (intubation, USI)\n"
                 "- Non-observance, mauvaise technique d'inhalation\n"
                 "- Utilisation excessive de BDCA\n"
@@ -264,11 +264,11 @@ def build_pneumologie_fiche() -> FicheData:
                 "- Incidence se stabilise chez l'homme, augmente chez la femme"
             )),
             FicheRow(concept="★ FDR", detail_md=(
-                "- ★ **Tabac+++** (> 15 PA femme, > 20 PA homme), cannabis\n"
+                "- **Tabac+++** (> 15 PA femme, > 20 PA homme), cannabis\n"
                 "- Exposition aéro-contaminants professionnels\n"
                 "- Pollution"
             )),
-            FicheRow(concept="◆ Entités cliniques", detail_md=(
+            FicheRow(concept="★ ◆ Entités cliniques", detail_md=(
                 "- **Bronchite chronique** (définition clinique) : toux productive quotidienne > **3 mois/an** "
                 "pendant > **2 années consécutives**\n"
                 "  - 50% des fumeurs, peut être simple (sans TVO) ou obstructive (avec TVO = BPCO)\n"
@@ -283,10 +283,10 @@ def build_pneumologie_fiche() -> FicheData:
                 "- **Dyspnée** : initialement à l'effort, évaluée par échelle **mMRC**\n"
                 "- Toux, expectoration"
             )),
-            FicheRow(concept="★ Signes physiques", detail_md=(
+            FicheRow(concept="Signes physiques", detail_md=(
                 "- Stades croissants : ronchi → allongement temps expiratoire → diminution MV → "
                 "distension thoracique (thorax en tonneau)\n"
-                "- ★ **Signe de Hoover** : diminution paradoxale du diamètre transversal thoracique inférieur "
+                "- **Signe de Hoover** : diminution paradoxale du diamètre transversal thoracique inférieur "
                 "à l'inspiration (distension sévère)\n"
                 "- Posture du **tripode** : assis, penché en avant, appui mains sur cuisses\n"
                 "- Exacerbations : muscles respiratoires accessoires (SCM++), expiration abdominale active"
@@ -302,7 +302,7 @@ def build_pneumologie_fiche() -> FicheData:
         ]),
         SousPartie(lettre="C", titre="Diagnostic positif : EFR", rows=[
             FicheRow(concept="★ Spirométrie", detail_md=(
-                "- ★ **TVO persistant** (non complètement réversible) : **VEMS/CVF < 0,7** après BD\n"
+                "- **TVO persistant** (non complètement réversible) : **VEMS/CVF < 0,7** après BD\n"
                 "- Réversibilité significative possible dans la BPCO\n"
                 "- ⚠ **Réversibilité complète** (VEMS/CVF > 0,7 + normalisation VEMS) → **exclut la BPCO**"
             )),
@@ -325,7 +325,7 @@ def build_pneumologie_fiche() -> FicheData:
             )),
         ]),
         SousPartie(lettre="D", titre="Évaluation et prise en charge", rows=[
-            FicheRow(concept="★ Bilan initial", detail_md=(
+            FicheRow(concept="Bilan initial", detail_md=(
                 "- EFR + score **GOLD**\n"
                 "- NFS (polyglobulie → IRC), ionogramme, créatinine\n"
                 "- Bilan nutritionnel (dénutrition = mauvais pronostic)\n"
@@ -335,7 +335,7 @@ def build_pneumologie_fiche() -> FicheData:
                 "- ECG + ETT si signes cardiaques (cœur pulmonaire chronique)"
             )),
             FicheRow(concept="★ Mesures générales", detail_md=(
-                "- ★ **Sevrage tabagique** +++ : seule mesure interrompant la progression de l'obstruction\n"
+                "- **Sevrage tabagique** +++ : seule mesure interrompant la progression de l'obstruction\n"
                 "- ALD si PaO2 < 60 mmHg et/ou PaCO2 > 50 mmHg ou VEMS < 50%\n"
                 "- Activité physique régulière, alimentation équilibrée"
             )),
@@ -343,7 +343,7 @@ def build_pneumologie_fiche() -> FicheData:
                 "- Anti-grippale **tous les ans**\n"
                 "- Anti-pneumococcique **tous les 5 ans**"
             )),
-            FicheRow(concept="★ Traitement pharmacologique", detail_md=(
+            FicheRow(concept="Traitement pharmacologique", detail_md=(
                 "- **BDLA inhalés** : B2-mimétiques LDA et/ou anticholinergiques LDA\n"
                 "  - Anticholinergiques LDA plus efficaces pour réduire les exacerbations\n"
                 "- Traitements CDA « à la demande » si dyspnée\n"
@@ -377,7 +377,7 @@ def build_pneumologie_fiche() -> FicheData:
                 "- Cause environnementale (pollution)\n"
                 "- Non identifiée fréquemment"
             )),
-            FicheRow(concept="◆ Traitement", detail_md=(
+            FicheRow(concept="★ ◆ Traitement", detail_md=(
                 "- **Bronchodilatateurs** CDA inhalés (B2-mimétiques +/- anticholinergiques)\n"
                 "- **O2** : objectif SpO2 **88-92%** (⚠ différent de l'asthme !)\n"
                 "- **ATB** si : expectoration purulente, BPCO très sévère (VEMS < 30%), signes de gravité\n"
@@ -398,12 +398,12 @@ def build_pneumologie_fiche() -> FicheData:
     # ── PARTIE III : SÉMIOLOGIE ET URGENCES RESPIRATOIRES ──
     partie_iii = Partie(numero="III", titre="Sémiologie et urgences respiratoires", sous_parties=[
         SousPartie(lettre="A", titre="Douleur thoracique aiguë et chronique", rows=[
-            FicheRow(concept="★ Interrogatoire", detail_md=(
+            FicheRow(concept="Interrogatoire", detail_md=(
                 "- ATCD familiaux/personnels, FDRCV, traitements\n"
                 "- Analyse sémiologique de la douleur\n"
                 "- Signes associés"
             )),
-            FicheRow(concept="★ Examens initiaux", detail_md=(
+            FicheRow(concept="Examens initiaux", detail_md=(
                 "- **RXT** face en inspiration\n"
                 "- **ECG** 12 dérivations + V3R, V4R, V7, V8, V9\n"
                 "- Si bradypnée/tachypnée ou SpO2 < 95% : **GDS**\n"
@@ -426,19 +426,19 @@ def build_pneumologie_fiche() -> FicheData:
             )),
             FicheRow(concept="Douleurs non rythmées", detail_md=(
                 "- Causes cardiaques : angor d'effort, RA serré, FA, myocardiopathie obstructive, péricardite\n"
-                "- ★ **Cocaïne** : à rechercher systématiquement (SCA, PNO)\n"
+                "- **Cocaïne** : à rechercher systématiquement (SCA, PNO)\n"
                 "- Zona thoracique\n"
                 "- Affections digestives : RGO, spasmes œsophagiens, pancréatite, cholécystite\n"
                 "- Douleurs psychogènes (1/4 des douleurs aux urgences) : diagnostic d'élimination"
             )),
         ]),
         SousPartie(lettre="B", titre="Dyspnée aiguë et chronique", rows=[
-            FicheRow(concept="★ Interrogatoire", detail_md=(
+            FicheRow(concept="Interrogatoire", detail_md=(
                 "- Chronologie : aiguë (heures/jours) vs chronique (semaines/mois)\n"
                 "- Cycle respiratoire : inspiratoire vs expiratoire\n"
                 "- Position : **orthopnée** (IC, dysfonction diaphragme), **antépnée**, **platypnée** (MAV)"
             )),
-            FicheRow(concept="★ Échelle mMRC", detail_md=(
+            FicheRow(concept="Échelle mMRC", detail_md=(
                 "| Stade | Description |\n"
                 "|-------|------------|\n"
                 "| 0 | Essoufflé pour effort important |\n"
@@ -447,13 +447,13 @@ def build_pneumologie_fiche() -> FicheData:
                 "| 3 | S'arrête après 90 m à plat |\n"
                 "| 4 | Trop essoufflé pour quitter la maison |\n"
             )),
-            FicheRow(concept="★ Signes de gravité", detail_md=(
+            FicheRow(concept="Signes de gravité", detail_md=(
                 "- **Détresse respiratoire** : cyanose, sueurs, polypnée > 30/min, tirage, "
                 "respiration abdominale paradoxale\n"
                 "- **Hémodynamique** : tachycardie > 110/min, choc, PAS < 90 mmHg, IVD aiguë\n"
                 "- **Neurologique** : agitation, torpeur, asterixis, coma"
             )),
-            FicheRow(concept="◆ Dyspnée aiguë — étiologies", detail_md=(
+            FicheRow(concept="★ ◆ Dyspnée aiguë — étiologies", detail_md=(
                 "- **Temps inspiratoire allongé** (obstruction VAS) : corps étranger, œdème de Quincke, "
                 "laryngite sous-glottique\n"
                 "- **Temps expiratoire allongé** (atteinte bronchique) : exacerbation asthme/BPCO, OAP\n"
@@ -467,11 +467,11 @@ def build_pneumologie_fiche() -> FicheData:
             )),
         ]),
         SousPartie(lettre="C", titre="Hémoptysie", rows=[
-            FicheRow(concept="★ Définition", detail_md=(
+            FicheRow(concept="Définition", detail_md=(
                 "- Saignement extériorisé (ou non) des voies respiratoires basses\n"
                 "- ⚠ Éliminer : hématémèse, épistaxis déglutie, saignement ORL"
             )),
-            FicheRow(concept="★ Étiologies", detail_md=(
+            FicheRow(concept="Étiologies", detail_md=(
                 "- **Cancer bronchique** +++\n"
                 "- Tuberculose (active ou séquellaire)\n"
                 "- Bronchectasies\n"
@@ -486,7 +486,7 @@ def build_pneumologie_fiche() -> FicheData:
                 "- **Fibroscopie bronchique** : localise le saignement, biopsies\n"
                 "- NFS, bilan d'hémostase, groupe sanguin"
             )),
-            FicheRow(concept="★ PEC urgente", detail_md=(
+            FicheRow(concept="PEC urgente", detail_md=(
                 "- Hospitalisation, position demi-assise\n"
                 "- O2, voie veineuse, bilan pré-transfusionnel\n"
                 "- Si hémoptysie massive : **artériographie bronchique + embolisation**\n"
@@ -505,29 +505,29 @@ def build_pneumologie_fiche() -> FicheData:
                 "- Anomalie « mécanique » → **transsudat**\n"
                 "- Agression inflammatoire/infectieuse/néoplasique → **exsudat**"
             )),
-            FicheRow(concept="★ Clinique", detail_md=(
+            FicheRow(concept="Clinique", detail_md=(
                 "- Dyspnée, douleur latéro-thoracique (majorée par respiration/toux)\n"
                 "- Toux sèche au changement de position → caractère non cloisonné\n"
-                "- ★ **Syndrome pleural liquidien** :\n"
+                "- **Syndrome pleural liquidien** :\n"
                 "  - Abolition du MV\n"
                 "  - **Matité** à la percussion\n"
                 "  - Abolition des vibrations vocales\n"
                 "  - Souffle pleurétique (doux, lointain, expiratoire)"
             )),
-            FicheRow(concept="★ Imagerie", detail_md=(
+            FicheRow(concept="Imagerie", detail_md=(
                 "- **RXT** : opacité dense, homogène, non systématisée, ligne de **Damoiseau** "
                 "(concave en haut et en dedans)\n"
                 "- **Échographie** : image anéchogène, épanchements cloisonnés, guide ponctions\n"
                 "- **TDM** : en urgence si EP/hémothorax suspecté"
             )),
-            FicheRow(concept="★ Ponction pleurale", detail_md=(
+            FicheRow(concept="Ponction pleurale", detail_md=(
                 "- **Systématique** sauf si : < 10 mm échographie, ou IC gauche suspectée "
                 "(sauf si atypique ou résistant au traitement)\n"
                 "- En urgence si : épanchement fébrile, suspicion hémothorax, mauvaise tolérance\n"
                 "- Bord supérieur de la côte inférieure de l'EIC\n"
                 "- RXT/échographie post-contrôle systématique (PNO iatrogène 3%)"
             )),
-            FicheRow(concept="★ Transsudat vs exsudat", detail_md=(
+            FicheRow(concept="Transsudat vs exsudat", detail_md=(
                 "| | Transsudat | Exsudat |\n"
                 "|--|-----------|--------|\n"
                 "| Leucocytes | < 1 000/µL | > 1 000/µL |\n"
@@ -540,25 +540,25 @@ def build_pneumologie_fiche() -> FicheData:
             )),
         ]),
         SousPartie(lettre="B", titre="Pneumothorax", rows=[
-            FicheRow(concept="★ Définition et types", detail_md=(
+            FicheRow(concept="Définition et types", detail_md=(
                 "- Présence d'air dans la cavité pleurale\n"
                 "- **PNO spontané primaire** : sujet jeune, longiligne, sans pathologie pulmonaire\n"
                 "- **PNO spontané secondaire** : sur poumon pathologique (BPCO, emphysème, fibrose)\n"
                 "- **PNO traumatique** : fractures costales, iatrogène (ponction, ventilation)"
             )),
-            FicheRow(concept="★ Clinique", detail_md=(
+            FicheRow(concept="Clinique", detail_md=(
                 "- Douleur thoracique brutale, type « coup de poignard », latéralisée\n"
                 "- Dyspnée variable\n"
-                "- ★ **Syndrome pleural aérien** :\n"
+                "- **Syndrome pleural aérien** :\n"
                 "  - Abolition du MV\n"
                 "  - **Tympanisme** à la percussion\n"
                 "  - Abolition des vibrations vocales"
             )),
-            FicheRow(concept="★ Imagerie", detail_md=(
+            FicheRow(concept="Imagerie", detail_md=(
                 "- **RXT** inspiration : hyperclarté avasculaire périphérique, ligne de rétraction\n"
                 "- ⚠ TDM si doute diagnostique ou PNO secondaire"
             )),
-            FicheRow(concept="★ PEC", detail_md=(
+            FicheRow(concept="PEC", detail_md=(
                 "- **PNO spontané primaire petit** (< 2 cm) : surveillance, repos\n"
                 "- **PNO modéré/symptomatique** : exsufflation à l'aiguille\n"
                 "- **PNO complet/récidivant** : drainage thoracique\n"
@@ -575,7 +575,7 @@ def build_pneumologie_fiche() -> FicheData:
     # ── PARTIE V : IMAGERIE ET EFR ──
     partie_v = Partie(numero="V", titre="Imagerie et EFR", sous_parties=[
         SousPartie(lettre="A", titre="Interprétation de la radiographie thoracique", rows=[
-            FicheRow(concept="★ Critères qualité", detail_md=(
+            FicheRow(concept="Critères qualité", detail_md=(
                 "- **Face** : debout, inspiration profonde, rayon postéro-antérieur\n"
                 "- Vérifier : identité, date, centrage (épineuses entre clavicules), "
                 "inspiration (6 arcs costaux antérieurs visibles), pénétration (rachis visible derrière cœur)"
@@ -584,7 +584,7 @@ def build_pneumologie_fiche() -> FicheData:
                 "- Profil gauche de préférence\n"
                 "- Repères : cyphose dorsale, clarté rétro-sternale et rétro-cardiaque"
             )),
-            FicheRow(concept="★ Syndromes radiologiques", detail_md=(
+            FicheRow(concept="Syndromes radiologiques", detail_md=(
                 "- **Syndrome alvéolaire** : opacités floconneuses, confluentes, bronchogramme aérien, "
                 "systématisé\n"
                 "- **Syndrome interstitiel** : réticulations, lignes de Kerley, images en verre dépoli, "
@@ -595,7 +595,7 @@ def build_pneumologie_fiche() -> FicheData:
             )),
         ]),
         SousPartie(lettre="B", titre="EFR — Synthèse", rows=[
-            FicheRow(concept="★ TVO", detail_md=(
+            FicheRow(concept="TVO", detail_md=(
                 "- **VEMS/CVF < 0,7** (rapport de Tiffeneau)\n"
                 "- Causes : asthme, BPCO, bronchectasies, mucoviscidose"
             )),
@@ -625,7 +625,7 @@ def build_pneumologie_fiche() -> FicheData:
                 "- Symptômes nocturnes : ronflements, apnées constatées, réveils avec sensation d'étouffement\n"
                 "- Symptômes diurnes : **somnolence diurne excessive** (échelle d'Epworth), "
                 "céphalées matinales, troubles de concentration\n"
-                "- ★ Complications CV : **HTA** ++ (diastolique et résistante), troubles du rythme, "
+                "- Complications CV : **HTA** ++ (diastolique et résistante), troubles du rythme, "
                 "AVC, IDM, insuffisance cardiaque"
             )),
             FicheRow(concept="★ Diagnostic", detail_md=(
@@ -649,7 +649,7 @@ def build_pneumologie_fiche() -> FicheData:
                 "- FDR : cancer bronchique, BPCO, maladies cardiovasculaires\n"
                 "- Lien établi troubles anxio-dépressifs et tabagisme"
             )),
-            FicheRow(concept="★ Évaluation", detail_md=(
+            FicheRow(concept="Évaluation", detail_md=(
                 "- **Test de Fagerström** : évalue la dépendance nicotinique\n"
                 "- Questions clés : délai première cigarette au réveil, nombre de cigarettes/jour\n"
                 "- Évaluer la motivation : modèle de **Prochaska** (précontemplation → contemplation → "
@@ -675,18 +675,18 @@ def build_pneumologie_fiche() -> FicheData:
                 "- **Toux chronique** : > **8 semaines**\n"
                 "- Toux subaiguë : 3-8 semaines"
             )),
-            FicheRow(concept="★ Toux aiguë — étiologies", detail_md=(
+            FicheRow(concept="Toux aiguë — étiologies", detail_md=(
                 "- Infections VAS : rhinopharyngite, sinusite, laryngite\n"
                 "- Infections VAI : bronchite aiguë, pneumonie\n"
                 "- Exacerbation asthme/BPCO\n"
                 "- EP, IC, pneumothorax\n"
                 "- Corps étranger (enfant ++)"
             )),
-            FicheRow(concept="★ Toux chronique — étiologies", detail_md=(
+            FicheRow(concept="Toux chronique — étiologies", detail_md=(
                 "- **3 causes principales** (80% des cas) :\n"
-                "  - ★ **Rhinorrhée postérieure** (jetage postérieur)\n"
-                "  - ★ **Asthme** (toux-équivalent d'asthme)\n"
-                "  - ★ **RGO**\n"
+                "  - **Rhinorrhée postérieure** (jetage postérieur)\n"
+                "  - **Asthme** (toux-équivalent d'asthme)\n"
+                "  - **RGO**\n"
                 "- Toux médicamenteuse : **IEC** +++ (toux sèche, arrêt ≥ 4 semaines pour résolution)\n"
                 "- Autres : tabagisme, BPCO, cancer bronchique, PID, IC, coqueluche, tuberculose"
             )),
@@ -766,16 +766,16 @@ def build_pneumologie_fiche() -> FicheData:
     ))
 
     points_cles = [
-        "★ L'asthme est une maladie inflammatoire chronique avec TVO **réversible** ; la BPCO a un TVO **persistant**",
-        "★ Le traitement de fond de l'asthme comporte **toujours** un CSI ; les CSI seuls sont **contre-indiqués** dans la BPCO",
-        "★ Objectif SpO2 en urgence : **93-95%** (asthme) vs **88-92%** (BPCO)",
-        "★ La réversibilité complète du TVO (VEMS/CVF > 0,7 + normalisation VEMS) **exclut** la BPCO",
-        "★ Devant toute toux chronique : rechercher **IEC**, **rhinorrhée postérieure**, **asthme** et **RGO**",
-        "★ Le sevrage tabagique est la **seule mesure** ralentissant la progression de l'obstruction dans la BPCO",
-        "★ L'hémoptysie nécessite un **scanner injecté** et une **fibroscopie** ; si massive → **embolisation**",
-        "★ Syndrome pleural liquidien : abolition MV + **matité** + abolition VV ; aérien : abolition MV + **tympanisme**",
-        "★ Le SAOS se complique d'**HTA résistante**, troubles du rythme, AVC ; traitement de référence = **PPC**",
-        "★ PNO compressif = **urgence vitale** → exsufflation immédiate sans attendre l'imagerie",
+        "L'asthme est une maladie inflammatoire chronique avec TVO **réversible** ; la BPCO a un TVO **persistant**",
+        "Le traitement de fond de l'asthme comporte **toujours** un CSI ; les CSI seuls sont **contre-indiqués** dans la BPCO",
+        "Objectif SpO2 en urgence : **93-95%** (asthme) vs **88-92%** (BPCO)",
+        "La réversibilité complète du TVO (VEMS/CVF > 0,7 + normalisation VEMS) **exclut** la BPCO",
+        "Devant toute toux chronique : rechercher **IEC**, **rhinorrhée postérieure**, **asthme** et **RGO**",
+        "Le sevrage tabagique est la **seule mesure** ralentissant la progression de l'obstruction dans la BPCO",
+        "L'hémoptysie nécessite un **scanner injecté** et une **fibroscopie** ; si massive → **embolisation**",
+        "Syndrome pleural liquidien : abolition MV + **matité** + abolition VV ; aérien : abolition MV + **tympanisme**",
+        "Le SAOS se complique d'**HTA résistante**, troubles du rythme, AVC ; traitement de référence = **PPC**",
+        "PNO compressif = **urgence vitale** → exsufflation immédiate sans attendre l'imagerie",
     ]
 
     fiche_eclair_md = (

@@ -36,3 +36,19 @@ examples/sample_figures/
 .idea/
 .vscode/
 examples/Hematopoiese_fusion.pdf
+
+# Sources non versionnées (contenu copyrighté ou volumineux)
+inputs/
+cardiologie/
+Annales/
+output/.extracted/
+output/.annales_txt/
+output/.work/
+
+# Settings locaux Claude
+.claude/settings.local.json
+
+# Outputs binaires volumineux (gardés en local seulement)
+output/*.docx
+output/*.pdf
+output/*.png

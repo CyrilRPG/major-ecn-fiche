@@ -60,13 +60,31 @@
         <tr>
           <td class="ft-concept">{{ row.concept | md_inline }}</td>
           <td class="ft-detail content">
+            {% if loop.index0 == ns.target %}
+              {# Petites images : float-right (3e colonne). #}
+              {% for img in sp.images %}{% set uri = img.saved_path | file_uri %}
+              {% set desc_low = (img.description or '') | lower %}
+              {% set is_large_kw = ('algorithme' in desc_low) or ('tableau' in desc_low) or ('classification' in desc_low) or ('score' in desc_low) or ('arbre' in desc_low) or ('strategie' in desc_low) or ('stratégie' in desc_low) %}
+              {% set is_large_type = img.type in ('tableau', 'algorithme', 'imagerie', 'classification') %}
+              {% set is_large_size = img.source and img.source.width and img.source.width >= 700 %}
+              {% set type_says_small = img.type in ('photo_clinique', 'schema') %}
+              {% set is_large = is_large_type or is_large_kw or (is_large_size and not type_says_small) %}
+              {% if uri and not is_large %}<figure class="ft-figure ft-figure--small">
+                <img src="{{ uri }}" alt="" />
+              </figure>{% endif %}{% endfor %}
+            {% endif %}
             {{ row.detail_md | md }}
             {% if loop.index0 == ns.target %}
+              {# Grosses images (algos, tableaux, classifications, images larges) : pleine largeur en bas. #}
               {% for img in sp.images %}{% set uri = img.saved_path | file_uri %}
-              {% if uri %}<figure class="ft-figure">
-                <img src="{{ uri }}" alt="{{ img.description }}" />
-                <figcaption>Figure&nbsp;{{ img.figure_number }} —
-                  {{ img.description }}</figcaption>
+              {% set desc_low = (img.description or '') | lower %}
+              {% set is_large_kw = ('algorithme' in desc_low) or ('tableau' in desc_low) or ('classification' in desc_low) or ('score' in desc_low) or ('arbre' in desc_low) or ('strategie' in desc_low) or ('stratégie' in desc_low) %}
+              {% set is_large_type = img.type in ('tableau', 'algorithme', 'imagerie', 'classification') %}
+              {% set is_large_size = img.source and img.source.width and img.source.width >= 700 %}
+              {% set type_says_small = img.type in ('photo_clinique', 'schema') %}
+              {% set is_large = is_large_type or is_large_kw or (is_large_size and not type_says_small) %}
+              {% if uri and is_large %}<figure class="ft-figure ft-figure--large">
+                <img src="{{ uri }}" alt="" />
               </figure>{% endif %}{% endfor %}
             {% endif %}
           </td>
@@ -78,10 +96,14 @@
             <span class="ft-reflexe-body content">{{ row.detail_md | md }}</span>
             {% if loop.index0 == ns.target %}
               {% for img in sp.images %}{% set uri = img.saved_path | file_uri %}
-              {% if uri %}<figure class="ft-figure">
-                <img src="{{ uri }}" alt="{{ img.description }}" />
-                <figcaption>Figure&nbsp;{{ img.figure_number }} —
-                  {{ img.description }}</figcaption>
+              {% set desc_low = (img.description or '') | lower %}
+              {% set is_large_kw = ('algorithme' in desc_low) or ('tableau' in desc_low) or ('classification' in desc_low) or ('score' in desc_low) or ('arbre' in desc_low) %}
+              {% set is_large_type = img.type in ('tableau', 'algorithme', 'imagerie', 'classification') %}
+              {% set is_large_size = img.source and img.source.width and img.source.width >= 700 %}
+              {% set type_says_small = img.type in ('photo_clinique', 'schema') %}
+              {% set is_large = is_large_type or is_large_kw or (is_large_size and not type_says_small) %}
+              {% if uri %}<figure class="ft-figure ft-figure--{{ 'large' if is_large else 'small' }}">
+                <img src="{{ uri }}" alt="" />
               </figure>{% endif %}{% endfor %}
             {% endif %}
           </td>
