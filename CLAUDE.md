@@ -123,6 +123,17 @@ if __name__ == "__main__":
 - **3-6 FicheRow** par sous-partie
 - **Cible : ~30 pages** par fiche PDF
 
+> ⚠ **Cohérence du plan à l'impression (charte HTML `render-mg-fiche.mjs`)** :
+> le `<thead>` d'une `.fiche-table` se répète en haut de chaque page
+> (`thead { display: table-header-group }`). Donc **une seule sous-partie par
+> `<table class="fiche-table">`**, avec son `ft-head-row` (« A. … ») dans SON
+> propre thead ; sinon l'en-tête « A. » se répète au-dessus du contenu de B/C
+> sur les pages suivantes (plan incohérent). Bannière sombre `ft-banner-row`
+> uniquement sur la 1re table de chaque partie ; chaque partie =
+> `<section class="partie-page partie-page--first">`. Après rendu, **vérifier
+> le plan page par page** (extraction texte via `pdfjs-dist`). Détail complet :
+> `major-ecn/docs/content-generation-standards.md` § « Affichage & rendu HTML ».
+
 ### Éléments d'un FicheRow
 
 | Type | Code | Rendu |
